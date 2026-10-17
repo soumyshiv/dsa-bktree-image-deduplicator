@@ -545,8 +545,17 @@ class DeduplicatorHTTPHandler(BaseHTTPRequestHandler):
                 tolerance = int(params.get("tolerance", [12])[0])
             except (ValueError, TypeError):
                 tolerance = 12
-            target_h = STATE["all_images"].get(target_path) if target_path else None
-            if STATE.get("bktree"):
+
+            active_items = {
+                p: h for p, h in STATE["all_images"].items()
+                if p not in STATE["recycle_bin"]
+            }
+            if target_path and target_path in active_items:
+                rooted_tree = BKTree.build_rooted_at(target_path, active_items)
+                target_h = active_items[target_path]
+                graph_data = rooted_tree.get_tree_graph(target_hash=target_h, tolerance=tolerance)
+            elif STATE.get("bktree"):
+                target_h = STATE["all_images"].get(target_path) if target_path else None
                 graph_data = STATE["bktree"].get_tree_graph(target_hash=target_h, tolerance=tolerance)
             else:
                 graph_data = {}

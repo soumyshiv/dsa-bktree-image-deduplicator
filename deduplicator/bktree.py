@@ -394,6 +394,25 @@ class BKTree:
 
         return tree
 
+    @classmethod
+    def build_rooted_at(cls, root_path: str, all_items: Dict[str, Any]) -> "BKTree":
+        """
+        Constructs a BK-Tree dynamically rooted at root_path.
+        Ensures the root pivot is the user's selected image, so all direct branches
+        represent discrete metric distance d(selected, child).
+        """
+        tree = cls()
+        if not all_items:
+            return tree
+
+        if root_path in all_items:
+            tree.add(all_items[root_path], root_path)
+
+        for path, img_hash in all_items.items():
+            if path != root_path:
+                tree.add(img_hash, path)
+
+        return tree
 
     def get_tree_stats(self) -> Dict[str, Any]:
         """Returns structural analytics about the tree."""

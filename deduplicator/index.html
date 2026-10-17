@@ -312,7 +312,7 @@
         </div>
       </section>
 
-      <!-- SECTION 3: BK-TREE TOPOLOGY GRAPH & STEP-BY-STEP SIMULATOR -->
+      <!-- SECTION 3: BK-TREE TOPOLOGY GRAPH & STEP-BY-STEP SIMULATOR (V2) -->
       <section id="sectionTree" class="hidden space-y-4">
         <!-- Top Toolbar -->
         <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10">
@@ -320,10 +320,10 @@
             <div class="flex items-center gap-2">
               <h2 class="text-base font-bold text-white tracking-tight">BK-Tree Metric Topology &amp; Pruning Simulator</h2>
               <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                DSA Hybrid
+                DSA Dynamic Root
               </span>
             </div>
-            <p class="text-xs text-slate-400 font-mono">Hierarchical metric tree embedding with live Triangle Inequality pruning audit</p>
+            <p class="text-xs text-slate-400 font-mono">Tree dynamically re-rooted on selected image &bull; Level 1 edges show direct Hamming distance</p>
           </div>
 
           <!-- Controls Toolbar -->
@@ -331,10 +331,10 @@
             <!-- Mode Switcher -->
             <div class="flex rounded-lg bg-[#05070d] p-1 border border-white/10">
               <button id="btnTreeModeExplore" onclick="setTreeVisualizerMode('explore')" class="px-3 py-1 rounded font-semibold transition text-white bg-blue-600 shadow-sm">
-                Explore Tree
+                🌲 Full Tree View
               </button>
               <button id="btnTreeModeSim" onclick="setTreeVisualizerMode('sim')" class="px-3 py-1 rounded font-semibold transition text-slate-400 hover:text-white">
-                Pruning Simulator
+                ⚙️ Pruning Simulator
               </button>
             </div>
 
@@ -348,131 +348,151 @@
 
             <!-- Pan & Zoom Buttons -->
             <div class="flex items-center gap-1 bg-[#05070d] p-1 rounded-lg border border-white/10">
-              <button onclick="zoomTree(1.2)" title="Zoom In" class="px-2 py-1 rounded hover:bg-[#151e36] text-slate-300 font-bold transition">+</button>
-              <button onclick="zoomTree(0.8)" title="Zoom Out" class="px-2 py-1 rounded hover:bg-[#151e36] text-slate-300 font-bold transition">&minus;</button>
-              <button onclick="resetTreeZoom()" title="Reset View" class="px-2 py-1 rounded hover:bg-[#151e36] text-slate-300 text-[11px] transition">↺ Reset</button>
+              <button onclick="zoomTreeStep(1.25)" title="Zoom In" class="px-2.5 py-1 rounded hover:bg-[#151e36] text-slate-300 font-bold transition">+</button>
+              <button onclick="zoomTreeStep(0.8)" title="Zoom Out" class="px-2.5 py-1 rounded hover:bg-[#151e36] text-slate-300 font-bold transition">&minus;</button>
+              <button onclick="resetTreeZoom()" title="Reset Center" class="px-2.5 py-1 rounded hover:bg-[#151e36] text-slate-300 text-[11px] transition">↺ Reset</button>
+            </div>
+
+            <!-- Collapse / Expand Sidebar Button -->
+            <button id="btnToggleSidebar" onclick="toggleOuterSidebar()" class="px-3 py-1 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-200 border border-white/10 hover:border-blue-500/40 transition flex items-center gap-1.5" title="Toggle Control Sidebar (Full-Width Canvas)">
+              <span id="sidebarToggleIcon">⇥</span>
+              <span id="sidebarToggleText" class="hidden sm:inline">Collapse Sidebar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Root Anchor Info Bar -->
+        <div class="rounded-xl bg-[#0a0e1a] border border-blue-500/30 p-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div class="flex items-center gap-3">
+            <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold text-[10px] border border-blue-500/30">ROOT ANCHOR</span>
+            <div class="flex items-center gap-2">
+              <img id="treeRootAnchorImg" src="" class="w-7 h-7 rounded-md object-cover border border-white/10 bg-black">
+              <span id="treeRootAnchorName" class="text-white font-bold text-xs truncate max-w-xs">Loading root...</span>
+            </div>
+            <span class="text-slate-500 text-[11px] hidden md:inline">&bull; Click any node to re-root tree on that image</span>
+          </div>
+          <div class="flex items-center gap-3 text-[11px] text-slate-400">
+            <span>Direct Metric Branches: <span id="treeRootBranchCount" class="text-blue-300 font-bold">0</span></span>
+            <span>Tolerance Radius: <span class="text-emerald-400 font-bold">&tau; = <span id="treeTauLabel">12</span></span></span>
+          </div>
+        </div>
+
+        <!-- Tree SVG Canvas Viewport (100% Full-Width) -->
+        <div class="w-full rounded-2xl border border-white/10 bg-[#090d16] p-2 metric-grid relative min-h-[500px] overflow-hidden flex flex-col shadow-inner">
+          <div id="treeCanvasWrapper" class="relative w-full h-[490px] overflow-hidden cursor-grab active:cursor-grabbing select-none">
+            <svg id="treeSvg" class="w-full h-full" viewBox="0 0 1100 520" preserveAspectRatio="xMidYMid meet">
+              <g id="treeViewportGroup"></g>
+            </svg>
+          </div>
+
+          <!-- Canvas Floating Mini Tooltip -->
+          <div id="treeNodeTooltip" class="hidden absolute z-30 pointer-events-none bg-[#090d16]/95 border border-blue-500/40 rounded-xl p-3 shadow-2xl backdrop-blur-md text-xs font-mono space-y-1.5 max-w-[270px] transition-all duration-100">
+            <div class="flex items-center gap-2.5">
+              <img id="treeTooltipImg" src="" class="w-11 h-11 rounded-lg object-cover border border-white/10 bg-black">
+              <div class="truncate">
+                <span id="treeTooltipName" class="font-bold text-white block truncate">filename.jpg</span>
+                <span id="treeTooltipDist" class="text-blue-400 text-[11px] font-bold">d(Root, Node) = —</span>
+              </div>
+            </div>
+            <div class="pt-1.5 border-t border-white/5 text-[10px] space-y-0.5 text-slate-400">
+              <div>Subtree Size: <span id="treeTooltipSubnodes" class="text-sky-300 font-bold">—</span></div>
+              <div>Status: <span id="treeTooltipStatus" class="font-bold">—</span></div>
+              <div class="text-blue-400 pt-0.5">💡 Click node to re-root tree</div>
+            </div>
+          </div>
+
+          <!-- Canvas Footer Helper & Mini HUD -->
+          <div class="p-2.5 border-t border-white/5 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-500">
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span> Root Selected Image</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> Duplicate Match (&le;&tau;)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-600 border border-dashed border-slate-400"></span> Pruned Branch (&gt;&tau;)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="treeZoomReadout" class="text-slate-400">Zoom: 100%</span>
+              <span class="text-slate-600">&bull;</span>
+              <span>Mouse wheel to zoom at cursor &bull; Drag to pan in 360°</span>
             </div>
           </div>
         </div>
 
-        <!-- Main Workspace: Canvas (Left 72%) + RHS Math Audit Panel (Right 28%) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        <!-- Below-the-Tree Pruning Simulator Panel (Visible when mode is 'sim') -->
+        <div id="treeSimulatorBottomPanel" class="hidden rounded-2xl border border-white/10 bg-[#0a0e1a] p-5 space-y-4 shadow-xl font-mono text-xs">
           
-          <!-- Tree SVG Viewport (8 Cols) -->
-          <div class="lg:col-span-8 rounded-2xl border border-white/10 bg-[#090d16] p-2 metric-grid relative min-h-[520px] overflow-hidden flex flex-col shadow-inner">
-            <div id="treeCanvasWrapper" class="relative w-full h-[500px] overflow-hidden cursor-grab active:cursor-grabbing select-none">
-              <svg id="treeSvg" class="w-full h-full" style="transform-origin: center center; transition: transform 0.15s ease-out;"></svg>
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="font-bold text-white text-sm">Triangle Inequality Pruning Audit Simulator</span>
+              <span class="text-[11px] text-slate-400">| Step-by-step mathematical elimination audit</span>
             </div>
-
-            <!-- Canvas Floating Mini Tooltip (Hidden by default, positions absolute on hover) -->
-            <div id="treeNodeTooltip" class="hidden absolute z-30 pointer-events-none bg-[#090d16]/95 border border-blue-500/40 rounded-xl p-3 shadow-2xl backdrop-blur-md text-xs font-mono space-y-1.5 max-w-[260px] transition-all duration-100">
-              <div class="flex items-center gap-2">
-                <img id="treeTooltipImg" src="" class="w-10 h-10 rounded-lg object-cover border border-white/10 bg-black">
-                <div class="truncate">
-                  <span id="treeTooltipName" class="font-bold text-white block truncate">filename.jpg</span>
-                  <span id="treeTooltipDist" class="text-blue-400 text-[11px]">d(P, C) = —</span>
-                </div>
-              </div>
-              <div class="pt-1 border-t border-white/5 text-[10px] space-y-0.5 text-slate-400">
-                <div>Distance to Target: <span id="treeTooltipTargetDist" class="text-white font-bold">—</span></div>
-                <div>Subtree Nodes: <span id="treeTooltipSubnodes" class="text-sky-300 font-bold">—</span></div>
-                <div>Status: <span id="treeTooltipStatus" class="font-bold">—</span></div>
-              </div>
-            </div>
-
-            <!-- Mini Canvas Footer Helper -->
-            <div class="p-2 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-500">
-              <div class="flex items-center gap-3">
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span> Target Path</span>
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> Match (&le;&tau;)</span>
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-600 border border-dashed border-slate-400"></span> Pruned (O(1))</span>
-              </div>
-              <span class="hidden sm:inline">Drag to pan &bull; Scroll to zoom &bull; Click node to focus</span>
+            <div class="flex items-center gap-2">
+              <span id="simStepCounterPill" class="text-[11px] font-bold px-2.5 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                Step 1 / 1
+              </span>
+              <button id="btnSimPrev" onclick="simStepPrev()" class="px-3 py-1 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-300 border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition font-semibold">
+                &larr; Prev Step
+              </button>
+              <button id="btnSimNext" onclick="simStepNext()" class="px-3.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 font-semibold transition">
+                Next Step &rarr;
+              </button>
+              <button onclick="simStepReset()" title="Reset to Step 1" class="px-2.5 py-1 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-400 hover:text-white border border-white/10 transition">
+                ↺ Reset
+              </button>
             </div>
           </div>
 
-          <!-- RHS Panel: Pruning Audit & Step Controller (4 Cols) -->
-          <div class="lg:col-span-4 space-y-3 font-mono text-xs">
+          <!-- 4-Column Simulator Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             
-            <!-- Step Controller Card -->
-            <div class="rounded-xl border border-white/10 bg-[#0a0e1a] p-4 space-y-3 shadow-sm">
-              <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
-                <div class="flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span class="font-bold uppercase tracking-wider text-slate-300 text-[11px]">Pruning Simulator</span>
-                </div>
-                <span id="simStepCounterPill" class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  Step 1 / 1
-                </span>
-              </div>
-
-              <!-- Stepper Controls -->
-              <div class="flex gap-2">
-                <button id="btnSimPrev" onclick="simStepPrev()" class="flex-1 py-1.5 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-300 border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition font-semibold flex items-center justify-center gap-1">
-                  &larr; Prev
-                </button>
-                <button id="btnSimNext" onclick="simStepNext()" class="flex-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 font-semibold transition flex items-center justify-center gap-1">
-                  Next &rarr;
-                </button>
-                <button onclick="simStepReset()" title="Reset Simulation" class="px-2.5 py-1.5 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-400 hover:text-white border border-white/10 transition">
-                  ↺
-                </button>
-              </div>
-
-              <!-- Current Pivot Node Badge -->
-              <div class="p-2.5 rounded-lg bg-[#05070d] border border-white/10 space-y-1.5">
-                <span class="text-[10px] text-slate-500 uppercase tracking-wider block">Current Anchor Pivot (P)</span>
-                <div class="flex items-center gap-2.5">
-                  <img id="simPivotImg" src="" class="w-9 h-9 rounded-md object-cover border border-white/10 bg-black">
-                  <div class="truncate">
-                    <span id="simPivotName" class="font-bold text-white block truncate text-[11px]">Root</span>
-                    <span id="simPivotDist" class="text-blue-400 text-[10px]">d(Q, P) = —</span>
-                  </div>
+            <!-- 1. Anchor Pivot Card -->
+            <div class="p-3.5 rounded-xl bg-[#05070d] border border-white/10 space-y-2">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Current Pivot Anchor (P)</span>
+              <div class="flex items-center gap-3">
+                <img id="simPivotImg" src="" class="w-11 h-11 rounded-lg object-cover border border-white/10 bg-black">
+                <div class="truncate">
+                  <span id="simPivotName" class="font-bold text-white block truncate text-xs">Root</span>
+                  <span id="simPivotDist" class="text-blue-400 text-[11px] font-bold">d(Q, P) = —</span>
                 </div>
               </div>
+            </div>
 
-              <!-- Dynamic Mathematical Pruning Bounds Card -->
-              <div class="p-3 rounded-lg bg-[#05070d] border border-blue-500/20 space-y-2">
-                <div class="flex items-center justify-between">
-                  <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Dynamic Bounds Formula</span>
-                  <span class="text-[10px] text-blue-400">&tau; = <span id="simTauVal">12</span></span>
-                </div>
-                
-                <div class="p-2 rounded bg-[#090d16] border border-white/5 text-center text-xs text-slate-200">
-                  <div class="text-[11px] text-slate-400 mb-0.5">[ d(Q, P) &minus; &tau; , &nbsp; d(Q, P) + &tau; ]</div>
-                  <div id="simDynamicFormula" class="font-bold text-blue-400 text-sm tracking-wide">[ — , — ]</div>
-                </div>
-
-                <div id="simVerdictBadge" class="p-2 rounded text-center text-[11px] font-semibold bg-slate-800/60 text-slate-300 border border-white/5">
-                  Ready to trace
-                </div>
+            <!-- 2. Dynamic Pruning Bounds Formula Card -->
+            <div class="p-3.5 rounded-xl bg-[#05070d] border border-blue-500/30 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Pruning Bounds Formula</span>
+                <span class="text-[10px] text-blue-400">&tau; = <span id="simTauVal">12</span></span>
               </div>
+              <div class="p-2 rounded bg-[#090d16] border border-white/5 text-center">
+                <div class="text-[10px] text-slate-400 mb-0.5">[ d(Q, P) &minus; &tau; , &nbsp; d(Q, P) + &tau; ]</div>
+                <div id="simDynamicFormula" class="font-bold text-blue-400 text-sm">[ — , — ]</div>
+              </div>
+            </div>
 
-              <!-- Pruning Telemetry & Efficiency Audit -->
-              <div class="pt-1 border-t border-white/5 space-y-1.5 text-[11px]">
-                <div class="flex justify-between items-center text-slate-400">
+            <!-- 3. Branch Evaluation Verdict -->
+            <div class="p-3.5 rounded-xl bg-[#05070d] border border-white/10 space-y-2 flex flex-col justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Branch Evaluation Verdict</span>
+              <div id="simVerdictBadge" class="p-2.5 rounded-lg text-center text-[11px] font-semibold bg-slate-800/60 text-slate-300 border border-white/5">
+                Ready to trace
+              </div>
+            </div>
+
+            <!-- 4. Subnodes Pruned Telemetry -->
+            <div class="p-3.5 rounded-xl bg-[#05070d] border border-white/10 space-y-1.5 flex flex-col justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Subtree Elimination Audit</span>
+              <div class="space-y-1 text-[11px]">
+                <div class="flex justify-between text-slate-400">
                   <span>Subtrees Pruned in O(1):</span>
                   <span id="simPrunedCount" class="text-emerald-400 font-bold">0 nodes</span>
                 </div>
-                <div class="flex justify-between items-center text-slate-400">
+                <div class="flex justify-between text-slate-400">
                   <span>Candidate Branches:</span>
                   <span id="simExploredCount" class="text-blue-300 font-bold">0 branches</span>
                 </div>
-                <div class="flex justify-between items-center text-slate-400">
+                <div class="flex justify-between text-slate-400">
                   <span>Tree Level:</span>
                   <span id="simDepthLevel" class="text-slate-300 font-bold">Level 1</span>
                 </div>
               </div>
-
-            </div>
-
-            <!-- Metric Axiom Reference Card -->
-            <div class="rounded-xl border border-white/10 bg-[#0a0e1a] p-3.5 space-y-1.5 text-[11px]">
-              <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block">Axiom 4: Triangle Inequality</span>
-              <p class="text-slate-300 font-mono text-[10px] leading-relaxed">
-                <span class="text-emerald-400 font-bold">d(Q, C) &ge; |d(Q, P) &minus; d(P, C)|</span><br>
-                Branches outside the closed interval are mathematically proven to contain zero duplicate candidates.
-              </p>
             </div>
 
           </div>
@@ -555,9 +575,7 @@
     </main>
 
     <!-- ========================================== -->
-    <!-- RIGHT SIDEBAR: CONTROLS & TELEMETRY (~30%) -->
-    <!-- ========================================== -->
-    <aside class="w-full lg:w-[30%] min-w-[320px] max-w-[420px] shrink-0 bg-[#090d16] p-6 space-y-6 overflow-y-auto border-t lg:border-t-0 lg:border-l border-white/10">
+    <aside id="rightSidebar" class="w-full lg:w-[30%] min-w-[320px] max-w-[420px] shrink-0 bg-[#090d16] p-6 space-y-6 overflow-y-auto border-t lg:border-t-0 lg:border-l border-white/10 transition-all duration-300">
       
       <!-- Metric Radius Slider Control -->
       <div class="space-y-3 p-4 rounded-xl bg-[#0a0e1a] border border-white/10 shadow-sm">
@@ -1532,7 +1550,7 @@
     }
 
     // ==========================================
-    // BK-TREE HYBRID MULTI-LEVEL & SIMULATOR ENGINE
+    // BK-TREE HYBRID MULTI-LEVEL & SIMULATOR ENGINE (V2)
     // ==========================================
     let treeRawData = null;
     let treeMaxDepth = 2;
@@ -1544,16 +1562,43 @@
     let isTreePanning = false;
     let treePanStartX = 0, treePanStartY = 0;
 
+    function toggleOuterSidebar() {
+      const sidebar = document.getElementById('rightSidebar');
+      const btn = document.getElementById('btnToggleSidebar');
+      const icon = document.getElementById('sidebarToggleIcon');
+      const text = document.getElementById('sidebarToggleText');
+      if (!sidebar) return;
+
+      const isHidden = sidebar.classList.toggle('hidden');
+      if (isHidden) {
+        if (icon) icon.textContent = '⇤';
+        if (text) text.textContent = 'Expand Sidebar';
+        if (btn) btn.classList.add('bg-blue-600/20', 'border-blue-500/50', 'text-blue-300');
+      } else {
+        if (icon) icon.textContent = '⇥';
+        if (text) text.textContent = 'Collapse Sidebar';
+        if (btn) btn.classList.remove('bg-blue-600/20', 'border-blue-500/50', 'text-blue-300');
+      }
+
+      if (currentSection === 'tree') {
+        setTimeout(renderTreeCanvas, 50);
+      }
+    }
+
     function setTreeVisualizerMode(mode) {
       treeVisualizerMode = mode;
       const btnExplore = document.getElementById('btnTreeModeExplore');
       const btnSim = document.getElementById('btnTreeModeSim');
+      const bottomPanel = document.getElementById('treeSimulatorBottomPanel');
+
       if (mode === 'explore') {
         btnExplore.className = "px-3 py-1 rounded font-semibold transition text-white bg-blue-600 shadow-sm";
         btnSim.className = "px-3 py-1 rounded font-semibold transition text-slate-400 hover:text-white";
+        if (bottomPanel) bottomPanel.classList.add('hidden');
       } else {
         btnSim.className = "px-3 py-1 rounded font-semibold transition text-white bg-blue-600 shadow-sm";
         btnExplore.className = "px-3 py-1 rounded font-semibold transition text-slate-400 hover:text-white";
+        if (bottomPanel) bottomPanel.classList.remove('hidden');
         if (treeSimSteps.length > 0) {
           updateSimStepUI(treeCurrentStepIdx);
         }
@@ -1575,22 +1620,14 @@
       renderTreeCanvas();
     }
 
-    function zoomTree(factor) {
-      treeScale = Math.min(2.5, Math.max(0.4, treeScale * factor));
-      applyTreeTransform();
-    }
-
-    function resetTreeZoom() {
-      treeScale = 1;
-      treePanX = 0;
-      treePanY = 0;
-      applyTreeTransform();
-    }
-
     function applyTreeTransform() {
-      const svg = document.getElementById('treeSvg');
-      if (svg) {
-        svg.style.transform = `translate(${treePanX}px, ${treePanY}px) scale(${treeScale})`;
+      const g = document.getElementById('treeViewportGroup');
+      const zoomText = document.getElementById('treeZoomReadout');
+      if (g) {
+        g.setAttribute('transform', `translate(${treePanX}, ${treePanY}) scale(${treeScale})`);
+      }
+      if (zoomText) {
+        zoomText.textContent = `Zoom: ${Math.round(treeScale * 100)}%`;
       }
     }
 
@@ -1617,11 +1654,51 @@
         isTreePanning = false;
       });
 
+      // Cursor-anchored wheel zooming
       wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
-        const factor = e.deltaY < 0 ? 1.08 : 0.92;
-        zoomTree(factor);
+        const rect = wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Coordinates in unscaled SVG coordinate space
+        const svgX = (mouseX - treePanX) / treeScale;
+        const svgY = (mouseY - treePanY) / treeScale;
+
+        const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+        const newScale = Math.min(3.0, Math.max(0.35, treeScale * zoomFactor));
+
+        // Adjust panX and panY so (svgX, svgY) remains precisely under cursor
+        treePanX = mouseX - svgX * newScale;
+        treePanY = mouseY - svgY * newScale;
+        treeScale = newScale;
+
+        applyTreeTransform();
       }, { passive: false });
+    }
+
+    function zoomTreeStep(factor) {
+      const wrapper = document.getElementById('treeCanvasWrapper');
+      const rect = wrapper ? wrapper.getBoundingClientRect() : { width: 1100, height: 500 };
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const svgX = (centerX - treePanX) / treeScale;
+      const svgY = (centerY - treePanY) / treeScale;
+
+      const newScale = Math.min(3.0, Math.max(0.35, treeScale * factor));
+      treePanX = centerX - svgX * newScale;
+      treePanY = centerY - svgY * newScale;
+      treeScale = newScale;
+
+      applyTreeTransform();
+    }
+
+    function resetTreeZoom() {
+      treeScale = 1;
+      treePanX = 0;
+      treePanY = 0;
+      applyTreeTransform();
     }
 
     function toggleNodeCollapse(nodeId, e) {
@@ -1682,10 +1759,10 @@
 
       if (prunedBranches.length > 0) {
         document.getElementById('simVerdictBadge').innerHTML = `<span class="text-rose-400 font-bold">PRUNED ${prunedBranches.length} branch(es)</span> outside bounds`;
-        document.getElementById('simVerdictBadge').className = "p-2 rounded text-center text-[11px] font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/20";
+        document.getElementById('simVerdictBadge').className = "p-2.5 rounded-lg text-center text-[11px] font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/20";
       } else {
         document.getElementById('simVerdictBadge').innerHTML = `<span class="text-emerald-400 font-bold">EXPLORE ${exploreBranches.length} candidate(s)</span> inside bounds`;
-        document.getElementById('simVerdictBadge').className = "p-2 rounded text-center text-[11px] font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20";
+        document.getElementById('simVerdictBadge').className = "p-2.5 rounded-lg text-center text-[11px] font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20";
       }
 
       document.getElementById('simPrunedCount').textContent = `${step.cumulative_pruned || 0} nodes`;
@@ -1697,13 +1774,12 @@
       const tooltip = document.getElementById('treeNodeTooltip');
       if (!tooltip) return;
       document.getElementById('treeTooltipName').textContent = node.name || 'Image Node';
-      document.getElementById('treeTooltipDist').textContent = `d(Parent, Node) = ${node.edge_distance || 0}`;
-      document.getElementById('treeTooltipTargetDist').textContent = node.dist_to_target !== null ? `${node.dist_to_target}` : 'N/A';
+      document.getElementById('treeTooltipDist').textContent = `d(Root, Node) = ${node.edge_distance || 0}`;
       document.getElementById('treeTooltipSubnodes').textContent = node.total_subtree_nodes || 1;
       document.getElementById('treeTooltipImg').src = node.thumbnail_url || '';
 
       const statusMap = {
-        'target': '🎯 Locked Target',
+        'target': '🎯 Root Selected Image',
         'match': '✓ Duplicate Match',
         'visited': '• Evaluated Branch',
         'pruned': '✕ Pruned Subtree'
@@ -1711,8 +1787,8 @@
       document.getElementById('treeTooltipStatus').textContent = statusMap[node.status] || node.status;
 
       const wrapper = document.getElementById('treeCanvasWrapper').getBoundingClientRect();
-      const left = Math.min(wrapper.width - 270, Math.max(10, x - wrapper.left + 15));
-      const top = Math.min(wrapper.height - 130, Math.max(10, y - wrapper.top + 15));
+      const left = Math.min(wrapper.width - 280, Math.max(10, x - wrapper.left + 15));
+      const top = Math.min(wrapper.height - 140, Math.max(10, y - wrapper.top + 15));
 
       tooltip.style.left = `${left}px`;
       tooltip.style.top = `${top}px`;
@@ -1727,7 +1803,7 @@
     async function renderTreeSvg() {
       setupTreePanZoom();
       const svg = document.getElementById('treeSvg');
-      svg.innerHTML = '<text x="50%" y="50%" fill="#64748b" text-anchor="middle" font-family="Geist Mono" font-size="12">Fetching BK-Tree topology...</text>';
+      svg.innerHTML = '<text x="50%" y="50%" fill="#64748b" text-anchor="middle" font-family="Geist Mono" font-size="12">Re-rooting BK-Tree on selected image...</text>';
       try {
         const res = await fetch(`/api/tree-graph?target=${encodeURIComponent(lockedTarget || '')}&tolerance=${toleranceRadius}`);
         const data = await res.json();
@@ -1740,6 +1816,17 @@
           return;
         }
 
+        // Update Root Anchor Header Info
+        const rootImg = document.getElementById('treeRootAnchorImg');
+        const rootName = document.getElementById('treeRootAnchorName');
+        const branchCount = document.getElementById('treeRootBranchCount');
+        const tauLabel = document.getElementById('treeTauLabel');
+
+        if (rootImg) rootImg.src = treeRawData.thumbnail_url || '';
+        if (rootName) rootName.textContent = treeRawData.name;
+        if (branchCount) branchCount.textContent = (treeRawData.children || []).length;
+        if (tauLabel) tauLabel.textContent = toleranceRadius;
+
         updateSimStepUI(0);
         renderTreeCanvas();
       } catch (e) {
@@ -1751,8 +1838,8 @@
       const svg = document.getElementById('treeSvg');
       if (!svg || !treeRawData || !treeRawData.name) return;
 
-      const width = 1100;
-      const height = 540;
+      const width = 1200;
+      const height = 520;
       svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
       let edgesSvg = '';
@@ -1762,27 +1849,27 @@
         ? treeSimSteps[treeCurrentStepIdx] 
         : null;
 
-      // Position Root (Depth 1)
+      // Position Root (Depth 1) at top center
       const rootX = width / 2;
       const rootY = 55;
       treeRawData._x = rootX;
       treeRawData._y = rootY;
 
-      const level1Children = (treeRawData.children || []).slice(0, 7);
+      const level1Children = (treeRawData.children || []).slice(0, 8);
       const l1Count = level1Children.length;
-      const l1Spacing = l1Count > 1 ? (width - 240) / (l1Count - 1) : 0;
+      const l1Spacing = l1Count > 1 ? (width - 260) / (l1Count - 1) : 0;
 
       level1Children.forEach((child, i) => {
-        child._x = l1Count === 1 ? width / 2 : 120 + i * l1Spacing;
-        child._y = 200;
+        child._x = l1Count === 1 ? width / 2 : 130 + i * l1Spacing;
+        child._y = 195;
 
         // Level 2 grandchildren
         const grandchildren = (child.children || []).slice(0, 3);
         const gcCount = grandchildren.length;
-        const gcSpread = Math.min(140, l1Spacing * 0.85);
+        const gcSpread = Math.min(130, l1Spacing * 0.85);
         grandchildren.forEach((gc, j) => {
           gc._x = gcCount === 1 ? child._x : (child._x - gcSpread / 2 + j * (gcSpread / (gcCount - 1)));
-          gc._y = 370;
+          gc._y = 350;
         });
       });
 
@@ -1793,8 +1880,7 @@
         const hasChildren = children.length > 0;
         const canExpand = currentDepth < treeMaxDepth;
 
-        // Render node pill
-        const isTarget = node.status === 'target' || (lockedTarget && node.path === lockedTarget);
+        const isRootTarget = currentDepth === 1;
         const isMatch = node.status === 'match';
         const isPruned = node.status === 'pruned';
         const isCurrentSimPivot = activeSimStep && activeSimStep.pivot_name === node.name;
@@ -1805,13 +1891,13 @@
 
         if (isCurrentSimPivot) {
           strokeCol = '#06b6d4';
-          glowCol = 'rgba(6, 182, 212, 0.8)';
-        } else if (isTarget) {
+          glowCol = 'rgba(6, 182, 212, 0.85)';
+        } else if (isRootTarget) {
           strokeCol = '#06b6d4';
-          glowCol = 'rgba(6, 182, 212, 0.7)';
+          glowCol = 'rgba(6, 182, 212, 0.75)';
         } else if (isMatch) {
           strokeCol = '#10b981';
-          glowCol = 'rgba(16, 185, 129, 0.7)';
+          glowCol = 'rgba(16, 185, 129, 0.75)';
         } else if (isPruned) {
           strokeCol = '#475569';
           glowCol = 'transparent';
@@ -1898,7 +1984,8 @@
       }
 
       drawSubtree(treeRawData, 1);
-      svg.innerHTML = edgesSvg + nodesSvg;
+      svg.innerHTML = `<g id="treeViewportGroup">${edgesSvg + nodesSvg}</g>`;
+      applyTreeTransform();
     }
 
     function handleTreeNodeClick(encodedPath) {

@@ -461,41 +461,60 @@
         </div>
       </div>
 
-      <!-- Live Algorithmic Benchmark Telemetry Card -->
-      <div class="p-4 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-3 font-mono text-xs shadow-sm">
-        <div class="flex items-center justify-between pb-2 border-b border-white/10">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Algorithmic Engine</span>
-          <span id="speedupTag" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Ready
-          </span>
-        </div>
-
-        <div class="space-y-2 text-[11px]">
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">BK-Tree Search:</span>
-            <span id="bktreeTime" class="text-white font-bold bg-[#05070d] px-2 py-0.5 rounded border border-white/10">— ms</span>
+      <!-- Live Algorithmic Benchmark Telemetry Dropdown Card -->
+      <div class="rounded-xl bg-[#0a0e1a] border border-white/10 font-mono text-xs shadow-sm overflow-hidden transition-all duration-200">
+        <!-- Dropdown Trigger Header -->
+        <button type="button" 
+                onclick="toggleAlgoEngineDropdown()" 
+                id="algoEngineToggleBtn"
+                class="w-full p-3.5 flex items-center justify-between text-left hover:bg-[#111728] focus:outline-none transition group cursor-pointer"
+                aria-expanded="false" 
+                aria-controls="algoEngineDropdownContent">
+          <div class="flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 group-hover:text-white transition">Algorithmic Engine</span>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">Exhaustive O(N):</span>
-            <span id="linearTime" class="text-slate-400 font-bold">— ms</span>
+          <div class="flex items-center gap-2">
+            <span id="speedupTag" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Ready
+            </span>
+            <svg id="algoEngineChevron" class="w-4 h-4 text-slate-400 group-hover:text-white transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">Pruning Ratio:</span>
-            <span id="pruningRatio" class="text-blue-400 font-bold">— %</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">Nodes Inspected:</span>
-            <span id="nodesVisitedText" class="text-slate-300">— / —</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">Tree Height:</span>
-            <span id="treeHeight" class="text-sky-400 font-bold">0 levels</span>
-          </div>
-        </div>
-
-        <button onclick="setSection('proof')" class="w-full py-2 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-blue-300 text-[11px] font-mono text-center border border-white/10 hover:border-blue-500/30 transition">
-          View Mathematical Proof &rarr;
         </button>
+
+        <!-- Dropdown Body Content -->
+        <div id="algoEngineDropdownContent" class="hidden px-4 pb-4 pt-2 border-t border-white/10 space-y-3">
+          <div class="space-y-2 text-[11px]">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">BK-Tree Search:</span>
+              <span id="bktreeTime" class="text-white font-bold bg-[#05070d] px-2 py-0.5 rounded border border-white/10">— ms</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">Exhaustive O(N):</span>
+              <span id="linearTime" class="text-slate-400 font-bold">— ms</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">Pruning Ratio:</span>
+              <span id="pruningRatio" class="text-blue-400 font-bold">— %</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">Nodes Inspected:</span>
+              <span id="nodesVisitedText" class="text-slate-300">— / —</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">Tree Height:</span>
+              <span id="treeHeight" class="text-sky-400 font-bold">0 levels</span>
+            </div>
+          </div>
+
+          <button onclick="setSection('proof')" class="w-full py-2 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-blue-300 text-[11px] font-mono text-center border border-white/10 hover:border-blue-500/30 transition">
+            View Mathematical Proof &rarr;
+          </button>
+        </div>
       </div>
 
       <!-- Batch Operations -->
@@ -715,6 +734,25 @@
       setupCurtainDragging();
       await fetchStatus();
       await refresh(true);
+    }
+
+    function toggleAlgoEngineDropdown(forceOpen) {
+      const content = document.getElementById('algoEngineDropdownContent');
+      const chevron = document.getElementById('algoEngineChevron');
+      const btn = document.getElementById('algoEngineToggleBtn');
+      if (!content || !chevron) return;
+
+      const shouldOpen = forceOpen !== undefined ? forceOpen : content.classList.contains('hidden');
+
+      if (shouldOpen) {
+        content.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      } else {
+        content.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
     }
 
     async function fetchStatus() {

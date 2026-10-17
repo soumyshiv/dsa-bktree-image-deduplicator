@@ -3,122 +3,162 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Motion DSA — Burkhard-Keller Metric Tree Studio</title>
+  <title>BK-Tree Metric Space Studio — Academic Image Deduplicator</title>
   
-  <!-- Geist Typography -->
+  <!-- Modern Typography (Plus Jakarta Sans, Inter & Geist Mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
 
-  <!-- Official Motion Library (by Matt Perry / motion.dev) -->
+  <!-- Official Motion Library (for smooth transitions) -->
   <script src="https://cdn.jsdelivr.net/npm/motion@11.11.17/dist/motion.js"></script>
 
   <style>
     :root {
-      --bg-canvas: #0a0c10;
-      --bg-panel: #10131a;
-      --bg-subtle: #171b26;
-      --border-subtle: #1f2533;
-      --border-strong: #2c3549;
-      --motion-yellow: #ffea00;
-      --motion-yellow-hover: #ffd000;
+      --bg-canvas: #05070d;
+      --bg-panel: #090d16;
+      --bg-card: #0e1424;
+      --bg-card-hover: #151e36;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(37, 99, 235, 0.35);
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-cobalt: #3b82f6;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
     }
     body {
-      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg-canvas);
       color: #f1f5f9;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
     }
     .font-mono {
       font-family: 'Geist Mono', monospace;
     }
-    /* Dot Matrix Playground Grid (exact motion.dev hero style) */
-    .motion-grid {
+    /* Academic Metric Dot Matrix */
+    .metric-grid {
       background-size: 24px 24px;
-      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-image: radial-gradient(circle, rgba(37, 99, 235, 0.12) 1px, transparent 1px);
     }
     /* Hairline Scrollbar */
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #262c3d; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #3b445c; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
     
-    /* Sleek Range Slider */
+    /* Academic Range Slider */
     input[type=range] {
       -webkit-appearance: none;
-      background: #1f2533;
-      height: 3px;
-      border-radius: 2px;
+      appearance: none;
+      background: #131b2e;
+      height: 5px;
+      border-radius: 3px;
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      height: 14px;
-      width: 14px;
+      appearance: none;
+      height: 18px;
+      width: 18px;
       border-radius: 50%;
-      background: var(--motion-yellow);
+      background: var(--accent-blue);
       cursor: pointer;
-      box-shadow: 0 0 12px rgba(255, 234, 0, 0.5);
-      transition: transform 0.15s ease;
+      box-shadow: 0 0 16px rgba(37, 99, 235, 0.85);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+      border: 2px solid #ffffff;
     }
     input[type=range]::-webkit-slider-thumb:hover {
-      transform: scale(1.3);
+      transform: scale(1.2);
+      background: var(--accent-cobalt);
+    }
+
+    /* Target Image Card Glow */
+    .target-active-glow {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 24px rgba(37, 99, 235, 0.45) !important;
+      transform: translateY(-2px);
+    }
+
+    /* Selected Card Glow */
+    .card-selected-glow {
+      border-color: #3b82f6 !important;
+      background-color: #121a30 !important;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-[#ffea00] selection:text-black">
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white bg-[#05070d]">
 
   <!-- ========================================== -->
-  <!-- 1. MOTION.DEV TOP NAVIGATION BAR          -->
+  <!-- 1. TOP HEADER & SECTION NAVIGATION         -->
   <!-- ========================================== -->
-  <header class="border-b border-[#1f2533] bg-[#0a0c10]/95 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
-    <div class="max-w-[1600px] mx-auto flex items-center justify-between gap-6">
+  <header class="border-b border-white/10 bg-[#05070d]/95 backdrop-blur-xl sticky top-0 z-50 px-6 py-3 transition-all">
+    <div class="max-w-[1700px] mx-auto flex items-center justify-between gap-4">
       
-      <!-- Brand Logo in Motion.dev style -->
+      <!-- Brand & Title -->
       <div class="flex items-center gap-6">
-        <a href="/" class="flex items-center gap-2 group">
-          <div class="flex items-center gap-1 font-bold text-lg tracking-tighter text-white">
-            <span class="text-[#ffea00] font-black group-hover:scale-110 transition-transform">///·</span>
-            <span>Motion</span>
-            <span class="text-xs px-1.5 py-0.5 rounded bg-[#1f2533] text-zinc-400 font-mono font-medium ml-1">DSA</span>
+        <a href="/" class="flex items-center gap-2.5 group">
+          <div class="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-200 shadow-sm shadow-blue-500/20">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <div class="flex flex-col">
+            <div class="flex items-center gap-1.5 font-extrabold text-sm tracking-tight text-white">
+              <span>BK-Tree Studio</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-500/15 text-blue-400 border border-blue-500/30 font-mono font-semibold">DSA PRO</span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-mono">Burkhard-Keller Metric Deduplicator</span>
           </div>
         </a>
 
-        <!-- Top Menu Tabs -->
-        <nav class="hidden md:flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          <button onclick="setStageTab('gallery')" id="topNavGallery" class="px-3 py-1.5 rounded-md text-white bg-[#171b26] transition-colors">
-            Gallery Studio
+        <!-- Top Section Switcher Tabs (Image Grid, Recycle Bin, Tree Visualizer, Math Proof) -->
+        <nav class="hidden md:flex items-center gap-1.5 text-xs font-semibold tracking-wide text-slate-400">
+          <button onclick="setSection('gallery')" id="tabGallery" class="px-3.5 py-1.5 rounded-lg text-white bg-blue-600 shadow-md shadow-blue-600/30 transition-all font-medium flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            <span>Image Grid</span>
           </button>
-          <button onclick="setStageTab('tree')" id="topNavTree" class="px-3 py-1.5 rounded-md hover:text-white transition-colors">
-            Metric Tree
+
+          <button onclick="setSection('bin')" id="tabBin" class="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/80 transition-colors flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+            <span>Recycle Bin <span id="topNavBinCount" class="text-[10px] font-mono text-slate-400 font-bold ml-0.5">(0)</span></span>
           </button>
-          <button onclick="setStageTab('diff')" id="topNavDiff" class="px-3 py-1.5 rounded-md hover:text-white transition-colors">
-            Loupe Diff
+
+          <button onclick="setSection('tree')" id="tabTree" class="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/80 transition-colors flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/><path d="M12 8v4M9 16l3-4 3 4"/></svg>
+            <span>Tree Visualizer</span>
           </button>
-          <button onclick="setStageTab('viva')" id="topNavViva" class="px-3 py-1.5 rounded-md hover:text-white transition-colors">
-            Viva Proofs
+
+          <button onclick="setSection('proof')" id="tabProof" class="px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/80 transition-colors flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+            <span>Math Proof</span>
           </button>
         </nav>
       </div>
 
-      <!-- Right CTAs & Directory Status -->
-      <div class="flex items-center gap-3">
-        <div class="hidden sm:flex items-center gap-2 text-xs font-mono text-zinc-400 px-3 py-1 rounded bg-[#10131a] border border-[#1f2533]">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+      <!-- Right CTAs & Mount Status -->
+      <div class="flex items-center gap-2.5">
+        <div class="hidden xl:flex items-center gap-2 text-xs font-mono text-slate-400 px-3 py-1.5 rounded-lg bg-[#0a0e1a] border border-white/10">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span id="folderLabel" class="truncate max-w-xs">No folder mounted</span>
         </div>
 
-        <button onclick="loadDemoDataset()" class="px-3 py-2 text-xs font-semibold rounded bg-[#171b26] hover:bg-[#1f2533] border border-[#2c3549] text-amber-300 transition-all duration-150 active:scale-95 flex items-center gap-2" title="Load bundled sample duplicate & near-duplicate dataset">
-          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span>Load Demo Dataset</span>
+        <!-- 1-Click Load Demo Dataset -->
+        <button onclick="loadDemoDataset()" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 transition-all duration-150 active:scale-95 flex items-center gap-1.5" title="Load bundled sample duplicate & near-duplicate dataset">
+          <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+          <span>⚡ Load Demo Dataset</span>
         </button>
 
-        <button onclick="browseFolder()" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded bg-[#ffea00] hover:bg-[#ffd000] text-black shadow-lg shadow-yellow-500/10 transition-all duration-150 active:scale-95 flex items-center gap-2">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <!-- Mount Native Directory -->
+        <button onclick="browseFolder()" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-200 border border-white/10 hover:border-blue-500/40 transition-all duration-150 active:scale-95 flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
           </svg>
-          <span>Mount Directory</span>
+          <span class="hidden sm:inline">Mount Directory</span>
         </button>
       </div>
 
@@ -126,307 +166,370 @@
   </header>
 
   <!-- ========================================== -->
-  <!-- 2. STUDIO DOCK & MAIN WORKSPACE            -->
+  <!-- 2. MAIN 70/30 SPLIT WORKSPACE              -->
   <!-- ========================================== -->
-  <div class="flex-1 max-w-[1600px] w-full mx-auto flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-[#1f2533]">
+  <div class="flex-1 max-w-[1700px] w-full mx-auto flex flex-col lg:flex-row overflow-hidden bg-[#05070d]">
 
     <!-- ========================================== -->
-    <!-- LEFT SIDEBAR: CONTROLS & TELEMETRY         -->
+    <!-- LEFT PANEL: PRIMARY WORKSPACE (~70% WIDTH) -->
     <!-- ========================================== -->
-    <aside class="w-full lg:w-80 shrink-0 bg-[#0a0c10] p-6 space-y-6 overflow-y-auto">
-      
-      <!-- View Segmented Switcher -->
-      <div class="space-y-2">
-        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">Workspace Modes</span>
-        <div class="grid grid-cols-2 p-1 bg-[#10131a] rounded-lg border border-[#1f2533] text-xs font-semibold">
-          <button id="sideTabLib" onclick="setViewMode('library')" class="py-2 rounded bg-[#ffea00] text-black transition-all font-bold">
-            Active (<span id="libCount">0</span>)
-          </button>
-          <button id="sideTabBin" onclick="setViewMode('bin')" class="py-2 rounded text-zinc-400 hover:text-white transition-all">
-            Recycle Bin (<span id="binCount">0</span>)
-          </button>
-        </div>
-      </div>
+    <main class="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto min-w-0">
 
-      <!-- Sensitivity Slider Control (Library Only) -->
-      <div id="sideToleranceControl" class="space-y-3 p-4 rounded-xl bg-[#10131a] border border-[#1f2533]">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-bold text-white">Metric Radius (&tau;)</span>
-          <span id="radiusPill" class="px-2 py-0.5 rounded font-mono text-[11px] font-bold bg-[#ffea00]/15 text-[#ffea00] border border-[#ffea00]/30">
-            14 (&ge;86%)
-          </span>
-        </div>
-
-        <input id="toleranceSlider" type="range" min="0" max="35" value="14" oninput="onToleranceInput(this.value)" class="w-full">
-
-        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-500">
-          <span>0 (Exact)</span>
-          <span class="text-emerald-400">14 (Strict)</span>
-          <span>35 (Loose)</span>
-        </div>
-
-        <!-- Presets -->
-        <div class="grid grid-cols-3 gap-1.5 pt-1">
-          <button type="button" onclick="setPreset(14)" class="py-1 px-1.5 rounded text-[10px] font-mono font-bold bg-[#171b26] hover:bg-[#ffea00] hover:text-black text-zinc-300 border border-[#1f2533] transition-colors text-center">
-            Strict &le;14
-          </button>
-          <button type="button" onclick="setPreset(17)" class="py-1 px-1.5 rounded text-[10px] font-mono font-bold bg-[#171b26] hover:bg-[#ffea00] hover:text-black text-zinc-300 border border-[#1f2533] transition-colors text-center">
-            Burst &le;17
-          </button>
-          <button type="button" onclick="setPreset(24)" class="py-1 px-1.5 rounded text-[10px] font-mono font-bold bg-[#171b26] hover:bg-[#ffea00] hover:text-black text-zinc-300 border border-[#1f2533] transition-colors text-center">
-            Broad &le;24
-          </button>
-        </div>
-      </div>
-
-      <!-- Live Telemetry Card (Linear Style) -->
-      <div class="p-4 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-3 font-mono text-xs">
-        <div class="flex items-center justify-between pb-2 border-b border-[#1f2533]">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Algorithmic Engine</span>
-          <span id="speedupTag" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Ready
-          </span>
-        </div>
-
-        <div class="space-y-1.5 text-[11px]">
-          <div class="flex justify-between">
-            <span class="text-zinc-500">BK-Tree Search:</span>
-            <span id="bktreeTime" class="text-white font-bold">— ms</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-zinc-500">Exhaustive O(N):</span>
-            <span id="linearTime" class="text-zinc-400 font-bold">— ms</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-zinc-500">Pruning Ratio:</span>
-            <span id="pruningRatio" class="text-[#ffea00] font-bold">— %</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-zinc-500">Subtree Skips:</span>
-            <span id="nodesVisitedText" class="text-zinc-300">— / —</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-zinc-500">Tree Height:</span>
-            <span id="treeHeight" class="text-cyan-300 font-bold">0 levels</span>
-          </div>
-        </div>
-
-        <button onclick="setStageTab('viva')" class="w-full py-1.5 rounded bg-[#171b26] hover:bg-[#1f2533] text-zinc-300 text-[11px] font-mono text-center border border-[#1f2533] transition">
-          View Mathematical Proof &rarr;
-        </button>
-      </div>
-
-      <!-- Batch Actions -->
-      <div class="space-y-2">
-        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">Batch Operations</span>
-        
-        <div class="flex gap-2">
-          <button onclick="selectAll()" class="flex-1 py-1.5 text-xs font-semibold rounded bg-[#10131a] hover:bg-[#171b26] text-zinc-300 border border-[#1f2533] transition">
-            Select All
-          </button>
-          <button onclick="deselectAll()" class="flex-1 py-1.5 text-xs font-semibold rounded bg-[#10131a] hover:bg-[#171b26] text-zinc-300 border border-[#1f2533] transition">
-            Deselect
-          </button>
-        </div>
-
-        <!-- Library Batch Controls -->
-        <div id="libBatchActions" class="space-y-2">
-          <button id="btnBatchBin" onclick="batchBin()" disabled class="w-full py-2 text-xs font-bold rounded bg-zinc-900 text-zinc-600 border border-zinc-900 cursor-not-allowed transition">
-            Stage Selected to Bin (<span id="selCount">0</span>)
-          </button>
-        </div>
-
-        <!-- Bin Batch Controls -->
-        <div id="binBatchActions" class="hidden space-y-2">
-          <button onclick="batchRestore()" class="w-full py-2 text-xs font-bold rounded bg-emerald-600 hover:bg-emerald-500 text-black shadow transition">
-            Restore Selected
-          </button>
-          <button onclick="batchDelete()" class="w-full py-2 text-xs font-bold rounded bg-red-600 hover:bg-red-500 text-white shadow transition">
-            Erase Permanently
-          </button>
-          <button onclick="emptyBin()" class="w-full py-2 text-xs font-bold rounded bg-[#171b26] hover:bg-red-950 text-red-300 border border-red-900/50 transition">
-            Empty Recycle Bin
-          </button>
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- ========================================== -->
-    <!-- RIGHT MAIN STAGE: THE INTERACTIVE CANVAS   -->
-    <!-- ========================================== -->
-    <main class="flex-1 p-6 lg:p-8 space-y-6 overflow-x-hidden">
-
-      <!-- Active Cluster Filter Bar -->
-      <div id="activeTargetBar" class="hidden rounded-xl bg-[#10131a] border border-[#ffea00]/40 p-4 flex items-center justify-between text-xs">
+      <!-- Active Target Pivot Header Bar (Visible when an image is locked) -->
+      <div id="activeTargetBar" class="hidden rounded-xl bg-[#0a0e1a] border border-blue-500/50 p-4 flex items-center justify-between text-xs shadow-xl shadow-blue-950/40 transition-all duration-200">
         <div class="flex items-center gap-3">
-          <span class="w-2.5 h-2.5 rounded-full bg-[#ffea00] animate-ping"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-400 animate-ping"></span>
           <div>
-            <span class="text-zinc-400 font-mono text-[11px] uppercase tracking-wider block">Target Pivot Locked</span>
+            <span class="text-blue-400 font-mono text-[11px] font-bold uppercase tracking-wider block">Target Pivot Locked</span>
             <span id="targetFilename" class="text-white font-bold font-mono text-sm">None</span>
           </div>
         </div>
-        <button onclick="clearTarget()" class="px-3 py-1.5 rounded-lg bg-[#171b26] hover:bg-[#1f2533] text-zinc-300 text-xs font-semibold border border-[#1f2533] transition">
-          Clear Cluster &times;
-        </button>
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-mono text-slate-400 hidden sm:inline">Matching images within &tau; radius</span>
+          <button onclick="clearTarget()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition">
+            Clear Target &times;
+          </button>
+        </div>
       </div>
 
-      <!-- TAB 1: GALLERY CLUSTER VIEW -->
-      <div id="stageGallery" class="space-y-4">
-        <div class="flex items-center justify-between pb-2 border-b border-[#1f2533]">
+      <!-- SECTION 1: ACTIVE IMAGE GRID -->
+      <section id="sectionGallery" class="space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
           <div>
-            <h2 id="galleryTitle" class="text-base font-bold text-white tracking-tight">Image Collection</h2>
-            <p id="gallerySubtitle" class="text-xs text-zinc-500 font-mono">Showing unindexed photos</p>
+            <h2 class="text-base font-bold text-white tracking-tight">Active Image Collection</h2>
+            <p class="text-xs text-slate-400 font-mono">100-bit multi-channel perceptual hashes indexed in discrete metric space</p>
           </div>
-          <span id="resultsCountPill" class="text-xs font-mono font-semibold text-zinc-400 px-2.5 py-1 rounded bg-[#10131a] border border-[#1f2533]">
-            0 Items
+          <span id="resultsCountPill" class="text-xs font-mono font-semibold text-blue-300 px-3 py-1 rounded-lg bg-blue-950/60 border border-blue-800/40">
+            0 Photos
           </span>
         </div>
 
-        <!-- Gallery Grid -->
-        <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-          <div class="col-span-full py-28 text-center space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-[#10131a] border border-[#1f2533] mx-auto flex items-center justify-center text-[#ffea00]">
+        <!-- The Image Grid (In-Place Anti-Flicker Architecture) -->
+        <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          <div id="emptyPlaceholder" class="col-span-full py-28 text-center space-y-3">
+            <div class="w-12 h-12 rounded-xl bg-[#0a0e1a] border border-white/10 mx-auto flex items-center justify-center text-blue-400 shadow-inner">
               <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
                 <circle cx="9" cy="9" r="2"/>
                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
               </svg>
             </div>
-            <h3 class="text-sm font-bold text-white">No Directory Mounted</h3>
-            <p class="text-xs text-zinc-500 max-w-sm mx-auto">Mount an image directory using the button above to index hashes into the Burkhard-Keller metric tree.</p>
+            <h3 class="text-sm font-bold text-white">No Image Folder Mounted</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">Click "⚡ Load Demo Dataset" above to test immediately, or mount an existing directory on your machine.</p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- TAB 2: INTERACTIVE BK-TREE TOPOLOGY -->
-      <div id="stageTree" class="hidden space-y-4">
-        <div class="flex items-center justify-between pb-2 border-b border-[#1f2533]">
+      <!-- SECTION 2: RECYCLE BIN -->
+      <section id="sectionBin" class="hidden space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
           <div>
-            <h2 class="text-base font-bold text-white tracking-tight">Interactive Metric Tree Topology</h2>
-            <p class="text-xs text-zinc-500 font-mono">Visualizing sub-linear branch pruning via Triangle Inequality bounds</p>
+            <h2 class="text-base font-bold text-white tracking-tight">Staged Recycle Bin</h2>
+            <p class="text-xs text-slate-400 font-mono">Photos staged for restoration or permanent disk deletion</p>
           </div>
-          <button onclick="renderTreeSvg()" class="px-3 py-1 rounded bg-[#171b26] hover:bg-[#1f2533] text-xs font-mono text-zinc-300 border border-[#1f2533]">
+          <div class="flex items-center gap-2">
+            <button onclick="emptyBin()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/50 transition">
+              Empty Bin
+            </button>
+            <span id="binCountPill" class="text-xs font-mono font-semibold text-rose-400 px-3 py-1 rounded-lg bg-rose-950/60 border border-rose-800/40">
+              0 Staged
+            </span>
+          </div>
+        </div>
+
+        <div id="binGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          <!-- Bin cards render dynamically -->
+        </div>
+      </section>
+
+      <!-- SECTION 3: BK-TREE TOPOLOGY GRAPH -->
+      <section id="sectionTree" class="hidden space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+          <div>
+            <h2 class="text-base font-bold text-white tracking-tight">BK-Tree Metric Topology Graph</h2>
+            <p class="text-xs text-slate-400 font-mono">Real-time discrete metric edge weights and Triangle Inequality branch pruning</p>
+          </div>
+          <button onclick="renderTreeSvg()" class="px-3.5 py-1.5 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-xs font-mono text-slate-300 border border-white/10 hover:border-blue-500/40 transition">
             Re-center Graph
           </button>
         </div>
 
-        <div class="rounded-2xl border border-[#1f2533] bg-[#0a0c10] p-6 motion-grid relative min-h-[460px] overflow-auto flex items-center justify-center">
+        <div class="rounded-2xl border border-white/10 bg-[#090d16] p-6 metric-grid relative min-h-[460px] overflow-auto flex items-center justify-center shadow-inner">
           <svg id="treeSvg" class="w-full h-[400px]" viewBox="0 0 900 380"></svg>
         </div>
 
-        <!-- Metric Proof Footer -->
+        <!-- Metric Proof Legend -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
-          <div class="p-4 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-1">
-            <span class="text-white font-bold block">&bull; Pivot Node</span>
-            <p class="text-zinc-500 text-[11px]">The subtree root acting as distance metric anchor $R$.</p>
+          <div class="p-4 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-1">
+            <span class="text-blue-400 font-bold block flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Pivot Node (Root)
+            </span>
+            <p class="text-slate-400 text-[11px]">Subtree root acting as distance metric anchor $P$ in Hamming metric space.</p>
           </div>
-          <div class="p-4 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-1">
-            <span class="text-emerald-400 font-bold block">&bull; Matched Branch</span>
-            <p class="text-zinc-500 text-[11px]">Branches within interval $d \in [d(Q, R) - \tau, d(Q, R) + \tau]$.</p>
+          <div class="p-4 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-1">
+            <span class="text-emerald-400 font-bold block flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Matched Subtree
+            </span>
+            <p class="text-slate-400 text-[11px]">Branches inside bounds $[d(Q, P) - \tau, d(Q, P) + \tau]$ containing duplicate candidates.</p>
           </div>
-          <div class="p-4 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-1">
-            <span class="text-zinc-500 font-bold block">&bull; Pruned Subtree</span>
-            <p class="text-zinc-500 text-[11px]">Branches outside the metric bounds are skipped in $O(1)$.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 3: SIDE-BY-SIDE LOUPE DIFF -->
-      <div id="stageDiff" class="hidden space-y-4">
-        <div class="flex items-center justify-between pb-2 border-b border-[#1f2533]">
-          <div>
-            <h2 class="text-base font-bold text-white tracking-tight">Synchronized Loupe Inspection</h2>
-            <p class="text-xs text-zinc-500 font-mono">Side-by-side comparative examination of burst-shot camera shifts</p>
+          <div class="p-4 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-1">
+            <span class="text-slate-500 font-bold block flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span> Pruned Subtree
+            </span>
+            <p class="text-slate-400 text-[11px]">Branches outside the metric bounds are skipped in $O(1)$ without visiting.</p>
           </div>
         </div>
+      </section>
 
-        <div id="diffContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="p-6 rounded-2xl bg-[#10131a] border border-[#1f2533] text-center text-xs text-zinc-500 font-mono py-24 col-span-full">
-            Select a photo and click "Match" to lock a target for comparative diff inspection.
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 4: MATHEMATICAL VIVA PROOFS -->
-      <div id="stageViva" class="hidden space-y-4">
-        <div class="pb-2 border-b border-[#1f2533]">
-          <h2 class="text-base font-bold text-white tracking-tight">Academic Rigor &amp; Viva Voce Guide</h2>
-          <p class="text-xs text-zinc-500 font-mono">Formal mathematical proofs of metric tree pruning and complexity bounds</p>
+      <!-- SECTION 4: MATHEMATICAL PROOF (NO VIVA) -->
+      <section id="sectionProof" class="hidden space-y-4">
+        <div class="pb-3 border-b border-white/10">
+          <h2 class="text-base font-bold text-white tracking-tight">Mathematical Proof: Metric Space Pruning</h2>
+          <p class="text-xs text-slate-400 font-mono">Formal mathematical proofs of metric tree pruning and algorithmic complexity</p>
         </div>
 
         <div class="space-y-4 text-xs font-mono">
-          <div class="p-5 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-3">
-            <span class="text-sm font-bold text-[#ffea00] block">Theorem: Correctness of Triangle Inequality Pruning</span>
-            <p class="text-zinc-300 leading-relaxed">
+          <!-- Theorem Card -->
+          <div class="p-5 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-3">
+            <span class="text-sm font-bold text-blue-400 block">Theorem: Correctness of Triangle Inequality Pruning</span>
+            <p class="text-slate-300 leading-relaxed font-sans text-xs">
               Let $M = (X, d)$ be a discrete metric space with elements $Q, P, C \in X$ where $Q$ is the search query, $P$ is the current pivot node, and $C$ is a child node connected by an edge of weight $d(P, C)$.
             </p>
-            <div class="p-4 rounded-lg bg-black border border-zinc-800 text-zinc-200 space-y-1">
-              <p>By the Triangle Inequality Axiom:</p>
+            <div class="p-4 rounded-lg bg-[#05070d] border border-white/10 text-slate-200 space-y-1">
+              <p class="text-slate-400 font-bold">By the Triangle Inequality Axiom:</p>
               <p class="text-emerald-400">1. d(Q, P) &le; d(Q, C) + d(P, C) &rArr; d(Q, C) &ge; |d(Q, P) - d(P, C)|</p>
               <p class="text-emerald-400">2. d(Q, C) &le; d(Q, P) + d(P, C)</p>
-              <p class="pt-2 text-zinc-400">Therefore: |d(Q, P) - d(P, C)| &le; d(Q, C) &le; d(Q, P) + d(P, C)</p>
+              <p class="pt-2 text-slate-400">Therefore: |d(Q, P) - d(P, C)| &le; d(Q, C) &le; d(Q, P) + d(P, C)</p>
             </div>
-            <p class="text-zinc-400 leading-relaxed">
+            <p class="text-slate-400 leading-relaxed font-sans text-xs">
               For any target tolerance $\tau$, the child subtree can contain a candidate $d(Q, C) \le \tau$ <strong>only if</strong> the edge weight satisfies:
-              <br><strong class="text-white">d(Q, P) - &tau; &le; d(P, C) &le; d(Q, P) + &tau;</strong>.
-              <br>Any edge outside this closed interval is mathematically guaranteed to contain zero matches and is safely pruned.
+              <br><strong class="text-white font-mono">d(Q, P) - &tau; &le; d(P, C) &le; d(Q, P) + &tau;</strong>.
+              <br>Any edge outside this closed interval is mathematically guaranteed to contain zero matches and is safely pruned in $O(1)$.
             </p>
           </div>
 
-          <div class="p-5 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-2">
-            <span class="text-sm font-bold text-white block">Complexity Formulation</span>
+          <!-- Discrete Metric Axioms -->
+          <div class="p-5 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-2">
+            <span class="text-sm font-bold text-white block">Metric Space Axioms (Hamming Metric)</span>
+            <p class="text-slate-400 font-sans text-xs">The 100-bit perceptual feature bitstring distance function $d_H(u, v) = \text{count\_nonzero}(u \oplus v)$ strictly satisfies all 4 metric axioms:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div class="p-3 rounded-lg bg-[#05070d] border border-white/10">
+                <span class="text-blue-400 font-bold block">1. Non-negativity</span>
+                <span class="text-slate-400 text-[11px]">d(x, y) &ge; 0</span>
+              </div>
+              <div class="p-3 rounded-lg bg-[#05070d] border border-white/10">
+                <span class="text-blue-400 font-bold block">2. Identity of Indiscernibles</span>
+                <span class="text-slate-400 text-[11px]">d(x, y) = 0 &hArr; x = y</span>
+              </div>
+              <div class="p-3 rounded-lg bg-[#05070d] border border-white/10">
+                <span class="text-blue-400 font-bold block">3. Symmetry</span>
+                <span class="text-slate-400 text-[11px]">d(x, y) = d(y, x)</span>
+              </div>
+              <div class="p-3 rounded-lg bg-[#05070d] border border-white/10">
+                <span class="text-blue-400 font-bold block">4. Triangle Inequality</span>
+                <span class="text-slate-400 text-[11px]">d(x, z) &le; d(x, y) + d(y, z)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Complexity Table -->
+          <div class="p-5 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-2">
+            <span class="text-sm font-bold text-white block">Algorithmic Complexity</span>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-              <div class="p-3 rounded bg-black border border-zinc-800">
-                <span class="text-zinc-500 block text-[10px]">CONSTRUCTION</span>
+              <div class="p-3 rounded bg-[#05070d] border border-white/10">
+                <span class="text-slate-500 block text-[10px]">TREE CONSTRUCTION</span>
                 <span class="text-white font-bold text-sm">O(N log N)</span>
               </div>
-              <div class="p-3 rounded bg-black border border-zinc-800">
-                <span class="text-zinc-500 block text-[10px]">RANGE QUERY</span>
+              <div class="p-3 rounded bg-[#05070d] border border-white/10">
+                <span class="text-slate-500 block text-[10px]">RANGE QUERY TIME</span>
                 <span class="text-emerald-400 font-bold text-sm">O(N<sup>&alpha;</sup>), &alpha; &lt; 1</span>
               </div>
-              <div class="p-3 rounded bg-black border border-zinc-800">
-                <span class="text-zinc-500 block text-[10px]">SPACE OVERHEAD</span>
-                <span class="text-cyan-400 font-bold text-sm">O(N) nodes</span>
+              <div class="p-3 rounded bg-[#05070d] border border-white/10">
+                <span class="text-slate-500 block text-[10px]">AUXILIARY SPACE</span>
+                <span class="text-blue-400 font-bold text-sm">O(N) nodes</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
     </main>
+
+    <!-- ========================================== -->
+    <!-- RIGHT SIDEBAR: CONTROLS & TELEMETRY (~30%) -->
+    <!-- ========================================== -->
+    <aside class="w-full lg:w-[30%] min-w-[320px] max-w-[420px] shrink-0 bg-[#090d16] p-6 space-y-6 overflow-y-auto border-t lg:border-t-0 lg:border-l border-white/10">
+      
+      <!-- Metric Radius Slider Control -->
+      <div class="space-y-3 p-4 rounded-xl bg-[#0a0e1a] border border-white/10 shadow-sm">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-white">Metric Radius (&tau;)</span>
+          <span id="radiusPill" class="px-2.5 py-0.5 rounded font-mono text-[11px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">
+            12 (&ge;88%)
+          </span>
+        </div>
+
+        <input id="toleranceSlider" type="range" min="0" max="35" value="12" oninput="onToleranceInput(this.value)" class="w-full cursor-pointer">
+
+        <div class="flex items-center justify-between text-[10px] font-mono text-slate-500">
+          <span>6 (Strict)</span>
+          <span class="text-blue-400 font-bold">12 (Balanced)</span>
+          <span>22 (Burst)</span>
+        </div>
+
+        <!-- Fast Presets -->
+        <div class="grid grid-cols-3 gap-1.5 pt-1">
+          <button type="button" onclick="setPreset(6)" data-val="6" class="preset-btn py-1 px-1.5 rounded-md text-[10px] font-mono font-bold bg-[#0e1424] hover:bg-blue-600 hover:text-white text-slate-300 border border-white/10 hover:border-blue-500/50 transition-colors text-center cursor-pointer">
+            Strict &tau;=6
+          </button>
+          <button type="button" onclick="setPreset(12)" data-val="12" class="preset-btn py-1 px-1.5 rounded-md text-[10px] font-mono font-bold bg-blue-600 text-white border border-blue-500 shadow-sm shadow-blue-500/30 transition-colors text-center cursor-pointer">
+            Balanced &tau;=12
+          </button>
+          <button type="button" onclick="setPreset(22)" data-val="22" class="preset-btn py-1 px-1.5 rounded-md text-[10px] font-mono font-bold bg-[#0e1424] hover:bg-blue-600 hover:text-white text-slate-300 border border-white/10 hover:border-blue-500/50 transition-colors text-center cursor-pointer">
+            Burst &tau;=22
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Algorithmic Benchmark Telemetry Card -->
+      <div class="p-4 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-3 font-mono text-xs shadow-sm">
+        <div class="flex items-center justify-between pb-2 border-b border-white/10">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Algorithmic Engine</span>
+          <span id="speedupTag" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Ready
+          </span>
+        </div>
+
+        <div class="space-y-2 text-[11px]">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">BK-Tree Search:</span>
+            <span id="bktreeTime" class="text-white font-bold bg-[#05070d] px-2 py-0.5 rounded border border-white/10">— ms</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">Exhaustive O(N):</span>
+            <span id="linearTime" class="text-slate-400 font-bold">— ms</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">Pruning Ratio:</span>
+            <span id="pruningRatio" class="text-blue-400 font-bold">— %</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">Nodes Inspected:</span>
+            <span id="nodesVisitedText" class="text-slate-300">— / —</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">Tree Height:</span>
+            <span id="treeHeight" class="text-sky-400 font-bold">0 levels</span>
+          </div>
+        </div>
+
+        <button onclick="setSection('proof')" class="w-full py-2 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-blue-300 text-[11px] font-mono text-center border border-white/10 hover:border-blue-500/30 transition">
+          View Mathematical Proof &rarr;
+        </button>
+      </div>
+
+      <!-- Batch Operations -->
+      <div class="space-y-2">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 block">Batch Operations</span>
+        
+        <div class="flex gap-2">
+          <button onclick="selectAll()" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#0a0e1a] hover:bg-[#151e36] text-slate-300 border border-white/10 transition">
+            Select All
+          </button>
+          <button onclick="deselectAll()" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-[#0a0e1a] hover:bg-[#151e36] text-slate-300 border border-white/10 transition">
+            Deselect
+          </button>
+        </div>
+
+        <!-- Library Batch Controls -->
+        <div id="libBatchActions" class="space-y-2">
+          <button id="btnBatchBin" onclick="batchBin()" disabled class="w-full py-2 text-xs font-semibold rounded-lg bg-[#05070d] text-slate-600 border border-white/5 cursor-not-allowed transition">
+            Stage Selected to Bin (<span id="selCount">0</span>)
+          </button>
+        </div>
+
+        <!-- Bin Batch Controls -->
+        <div id="binBatchActions" class="hidden space-y-2">
+          <button onclick="batchRestore()" class="w-full py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow transition">
+            Restore Selected
+          </button>
+          <button onclick="batchDelete()" class="w-full py-2 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow transition">
+            Erase Permanently
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Target / Selection Inspector -->
+      <div id="targetInspectorCard" class="hidden p-4 rounded-xl bg-[#0a0e1a] border border-white/10 space-y-3 font-mono text-xs shadow-sm">
+        <div class="flex items-center justify-between pb-1 border-b border-white/10">
+          <span id="inspectorTitle" class="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Image Metadata</span>
+          <span id="inspectorFormat" class="text-[10px] px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">JPEG</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <img id="inspectorThumb" src="" class="w-14 h-14 object-cover rounded-lg border border-white/10 bg-black shrink-0">
+          <div class="overflow-hidden space-y-0.5">
+            <span id="inspectorName" class="text-white font-bold block truncate max-w-[200px]"></span>
+            <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+              <span id="inspectorDimensions">—</span>
+              <span>&bull;</span>
+              <span id="inspectorSize">—</span>
+            </div>
+            <span id="inspectorCamera" class="text-[11px] text-slate-300 block truncate">—</span>
+          </div>
+        </div>
+        <div class="space-y-1 pt-1 border-t border-white/5 text-[11px]">
+          <div class="flex justify-between text-slate-400">
+            <span>Captured Date:</span>
+            <span id="inspectorDate" class="text-slate-200 font-medium">—</span>
+          </div>
+          <div class="flex justify-between text-slate-400">
+            <span>Camera Exposure:</span>
+            <span id="inspectorExposure" class="text-slate-200 font-medium">—</span>
+          </div>
+          <div class="pt-1">
+            <span class="text-slate-500 block text-[10px]">100-Bit Metric Hash:</span>
+            <span id="inspectorHash" class="text-blue-400 text-[10px] block truncate font-mono select-all"></span>
+          </div>
+          <div class="pt-2 flex justify-end">
+            <button id="inspectorModalBtn" class="text-[11px] text-blue-400 hover:text-blue-300 underline font-medium cursor-pointer">View Full EXIF Dialog &rarr;</button>
+          </div>
+        </div>
+      </div>
+
+    </aside>
 
   </div>
 
   <!-- ========================================== -->
   <!-- 3. METADATA & EXIF INSPECTION MODAL        -->
   <!-- ========================================== -->
-  <div id="exifModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-6">
-    <div class="bg-[#10131a] border border-[#1f2533] rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col font-mono text-xs">
-      <div class="flex items-center justify-between border-b border-[#1f2533] pb-3">
+  <div id="exifModal" onclick="if(event.target === this) toggleExifModal()" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-6 cursor-pointer">
+    <div onclick="event.stopPropagation()" class="bg-[#090d16] border border-white/10 rounded-2xl max-w-2xl w-full p-6 shadow-2xl shadow-blue-950/80 space-y-4 max-h-[90vh] flex flex-col font-mono text-xs cursor-default">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
         <div>
           <h2 id="metaFilename" class="text-sm font-bold text-white">Metadata Inspector</h2>
-          <span class="text-[11px] text-zinc-500">EXIF parameters &amp; metric vector</span>
+          <span class="text-[11px] text-slate-400">EXIF parameters &amp; metric vector</span>
         </div>
-        <button onclick="toggleExifModal()" class="text-zinc-400 hover:text-white text-lg p-1">&times;</button>
+        <button onclick="toggleExifModal()" class="text-slate-400 hover:text-white text-lg p-1">&times;</button>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 overflow-y-auto">
-        <div class="h-56 rounded-xl bg-black border border-zinc-800 overflow-hidden flex items-center justify-center">
+        <div class="h-56 rounded-xl bg-[#05070d] border border-white/10 overflow-hidden flex items-center justify-center">
           <img id="metaImg" src="" class="max-h-full max-w-full object-contain">
         </div>
 
-        <div class="space-y-1.5 text-zinc-300">
-          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Camera</span><span id="metaCamera" class="text-white">N/A</span></div>
-          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Resolution</span><span id="metaDimensions" class="text-white">N/A</span></div>
-          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Filesize</span><span id="metaSize" class="text-white">N/A</span></div>
-          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Aperture</span><span id="metaAperture" class="text-white">N/A</span></div>
-          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Shutter</span><span id="metaShutter" class="text-white">N/A</span></div>
-          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">ISO</span><span id="metaIso" class="text-white">N/A</span></div>
-          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Captured</span><span id="metaDate" class="text-white">N/A</span></div>
+        <div class="space-y-1.5 text-slate-300">
+          <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">Camera</span><span id="metaCamera" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">Resolution</span><span id="metaDimensions" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">Filesize</span><span id="metaSize" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">Aperture</span><span id="metaAperture" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">Shutter</span><span id="metaShutter" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">ISO</span><span id="metaIso" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">Focal Length</span><span id="metaFocal" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-white/5 pb-1"><span class="text-slate-500">Captured</span><span id="metaDate" class="text-white">N/A</span></div>
           <div class="pt-2">
-            <span class="text-zinc-500 block mb-1">100-Bit Metric Hash:</span>
-            <div id="metaHash" class="p-2 rounded bg-black border border-zinc-800 text-[#ffea00] text-[10px] break-all select-all"></div>
+            <span class="text-slate-500 block mb-1">100-Bit Metric Hash:</span>
+            <div id="metaHash" class="p-2 rounded bg-[#05070d] border border-white/10 text-blue-400 text-[10px] break-all select-all font-mono"></div>
           </div>
         </div>
       </div>
@@ -434,19 +537,21 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- 4. JAVASCRIPT LOGIC & MOTION ANIMATION     -->
+  <!-- 4. FLICKER-FREE JAVASCRIPT ENGINE          -->
   <!-- ========================================== -->
   <script>
-    let viewMode = "library";
-    let activeStageTab = "gallery";
+    let currentSection = "gallery";
     let lockedTarget = null;
-    let toleranceRadius = 14;
+    let toleranceRadius = 12;
     let items = [];
+    let binItems = [];
     let selectedSet = new Set();
+    let searchDebounceTimer = null;
+    let hasAnimatedOnce = false;
 
     async function init() {
       await fetchStatus();
-      await refresh();
+      await refresh(true);
     }
 
     async function fetchStatus() {
@@ -455,14 +560,55 @@
         const data = await res.json();
         if (data.folder) {
           document.getElementById('folderLabel').textContent = data.folder;
-          document.getElementById('libCount').textContent = data.active_images;
-          document.getElementById('binCount').textContent = data.bin_count;
+          document.getElementById('topNavBinCount').textContent = `(${data.bin_count || 0})`;
           if (data.tree_stats) {
             document.getElementById('treeHeight').textContent = `${data.tree_stats.height || 0} levels`;
           }
         }
       } catch (e) {
         console.error(e);
+      }
+    }
+
+    // Top Header Section Switcher (Image Grid, Recycle Bin, Tree Visualizer, Math Proof)
+    function setSection(sec) {
+      currentSection = sec;
+      selectedSet.clear();
+      updateSelectionUI();
+
+      const tabs = [
+        { id: 'tabGallery', sec: 'gallery', el: 'sectionGallery' },
+        { id: 'tabBin', sec: 'bin', el: 'sectionBin' },
+        { id: 'tabTree', sec: 'tree', el: 'sectionTree' },
+        { id: 'tabProof', sec: 'proof', el: 'sectionProof' }
+      ];
+
+      tabs.forEach(t => {
+        const btn = document.getElementById(t.id);
+        const sectionEl = document.getElementById(t.el);
+        if (t.sec === sec) {
+          btn.className = "px-3.5 py-1.5 rounded-lg text-white bg-blue-600 shadow-md shadow-blue-600/30 transition-all font-medium flex items-center gap-1.5";
+          sectionEl.classList.remove('hidden');
+        } else {
+          btn.className = "px-3.5 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/80 transition-colors flex items-center gap-1.5";
+          sectionEl.classList.add('hidden');
+        }
+      });
+
+      // Update right-sidebar controls depending on section
+      const libBatch = document.getElementById('libBatchActions');
+      const binBatch = document.getElementById('binBatchActions');
+      if (sec === 'bin') {
+        libBatch.classList.add('hidden');
+        binBatch.classList.remove('hidden');
+        loadBinGrid();
+      } else {
+        libBatch.classList.remove('hidden');
+        binBatch.classList.add('hidden');
+      }
+
+      if (sec === 'tree') {
+        renderTreeSvg();
       }
     }
 
@@ -473,10 +619,10 @@
         if (d.success) {
           lockedTarget = null;
           selectedSet.clear();
+          hasAnimatedOnce = false;
           await fetchStatus();
-          await refresh();
+          await refresh(true);
         } else {
-          // Fallback: allow manual folder path entry if OS dialog was cancelled or unavailable
           const manual = prompt("Enter folder path to index (or leave empty to cancel):", "sample_images");
           if (manual && manual.trim()) {
             await loadFolder(manual.trim());
@@ -494,8 +640,9 @@
         if (d.success) {
           lockedTarget = null;
           selectedSet.clear();
+          hasAnimatedOnce = false;
           await fetchStatus();
-          await refresh();
+          await refresh(true);
         } else {
           alert("Could not load demo dataset: " + (d.message || "Directory not found"));
         }
@@ -516,8 +663,9 @@
         if (d.success) {
           lockedTarget = null;
           selectedSet.clear();
+          hasAnimatedOnce = false;
           await fetchStatus();
-          await refresh();
+          await refresh(true);
         } else {
           alert("Could not mount folder: " + (d.message || "Invalid path"));
         }
@@ -527,121 +675,160 @@
       }
     }
 
-    function setViewMode(mode) {
-      viewMode = mode;
-      selectedSet.clear();
-      updateSelectionUI();
-
-      const btnLib = document.getElementById('sideTabLib');
-      const btnBin = document.getElementById('sideTabBin');
-      const tolBox = document.getElementById('sideToleranceControl');
-      const binBox = document.getElementById('binBox');
-      const libBatch = document.getElementById('libBatchActions');
-      const binBatch = document.getElementById('binBatchActions');
-
-      if (mode === 'library') {
-        btnLib.className = "py-2 rounded bg-[#ffea00] text-black transition-all font-bold";
-        btnBin.className = "py-2 rounded text-zinc-400 hover:text-white transition-all";
-        tolBox.classList.remove('hidden');
-        libBatch.classList.remove('hidden');
-        binBatch.classList.add('hidden');
-        document.getElementById('galleryTitle').textContent = "Active Photo Library";
-      } else {
-        // Recycle Bin Mode: clear active target filter
-        lockedTarget = null;
-        document.getElementById('activeTargetBar').classList.add('hidden');
-        btnBin.className = "py-2 rounded bg-[#ffea00] text-black transition-all font-bold";
-        btnLib.className = "py-2 rounded text-zinc-400 hover:text-white transition-all";
-        tolBox.classList.add('hidden');
-        libBatch.classList.add('hidden');
-        binBatch.classList.remove('hidden');
-        document.getElementById('galleryTitle').textContent = "Internal Recycle Bin";
-      }
-
-      refresh();
-    }
-
-    function setStageTab(tab) {
-      activeStageTab = tab;
-      const tabs = ['gallery', 'tree', 'diff', 'viva'];
-      tabs.forEach(t => {
-        const stageEl = document.getElementById(`stage${capitalize(t)}`);
-        const navEl = document.getElementById(`topNav${capitalize(t)}`);
-        if (t === tab) {
-          stageEl.classList.remove('hidden');
-          navEl.className = "px-3 py-1.5 rounded-md text-white bg-[#171b26] transition-colors";
-        } else {
-          stageEl.classList.add('hidden');
-          navEl.className = "px-3 py-1.5 rounded-md hover:text-white transition-colors";
-        }
-      });
-
-      if (tab === 'tree') {
-        renderTreeSvg();
-      } else if (tab === 'diff') {
-        renderDiffStage();
-      }
-    }
-
     function setPreset(val) {
-      if (viewMode !== 'library') return;
       document.getElementById('toleranceSlider').value = val;
       onToleranceInput(val);
     }
 
+    // Debounced Range Slider (80ms) for 60fps interaction without image reloads
     function onToleranceInput(val) {
-      if (viewMode !== 'library') return;
       toleranceRadius = parseInt(val);
 
       const pill = document.getElementById('radiusPill');
-      const sim = 100 - toleranceRadius;
+      const sim = Math.max(0, 100 - toleranceRadius);
       pill.textContent = `${toleranceRadius} (≥${sim}%)`;
 
+      // Synchronize active preset button styling
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        const btnVal = parseInt(btn.dataset.val);
+        if (btnVal === toleranceRadius) {
+          btn.className = "preset-btn py-1 px-1.5 rounded-md text-[10px] font-mono font-bold bg-blue-600 text-white border border-blue-500 shadow-sm shadow-blue-500/30 transition-colors text-center cursor-pointer";
+        } else {
+          btn.className = "preset-btn py-1 px-1.5 rounded-md text-[10px] font-mono font-bold bg-[#0e1424] hover:bg-blue-600 hover:text-white text-slate-300 border border-white/10 hover:border-blue-500/50 transition-colors text-center cursor-pointer";
+        }
+      });
+
       if (lockedTarget) {
-        executeSearch();
+        if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+          executeSearch();
+        }, 80);
       }
     }
 
-    async function lockTarget(path) {
+    async function lockTarget(rawPath) {
+      const path = (typeof rawPath === 'string' && rawPath.includes('%')) ? decodeURIComponent(rawPath) : rawPath;
       lockedTarget = path;
+      document.getElementById('activeTargetBar').classList.remove('hidden');
+      document.getElementById('targetFilename').textContent = path.split('/').pop();
+      
+      // Update inspector card with full EXIF & metadata
+      await inspectImage(path, true);
+
+      // Immediately switch to Gallery tab if in another view
+      if (currentSection !== 'gallery') {
+        setSection('gallery');
+      }
+
       await executeSearch();
+    }
+
+    async function inspectImage(rawPath, isTarget = false) {
+      const path = (typeof rawPath === 'string' && rawPath.includes('%')) ? decodeURIComponent(rawPath) : rawPath;
+      const card = document.getElementById('targetInspectorCard');
+      if (!card) return;
+      card.classList.remove('hidden');
+
+      const fname = path.split('/').pop();
+      const titleEl = document.getElementById('inspectorTitle');
+      if (titleEl) {
+        titleEl.textContent = isTarget ? 'Target Pivot Metadata' : 'Selected Photo Metadata';
+      }
+      document.getElementById('inspectorName').textContent = fname;
+      document.getElementById('inspectorThumb').src = `/api/thumbnail?path=${encodeURIComponent(path)}`;
+
+      // Immediate fill from cached list items if available
+      const allItems = [...items, ...binItems];
+      const found = allItems.find(i => i.path === path);
+      if (found) {
+        document.getElementById('inspectorFormat').textContent = found.format || 'IMG';
+        document.getElementById('inspectorDimensions').textContent = found.dimensions || '—';
+        document.getElementById('inspectorSize').textContent = (found.size_mb !== undefined) ? `${found.size_mb} MB` : '—';
+        document.getElementById('inspectorHash').textContent = found.hash || '—';
+      }
+
+      const modalBtn = document.getElementById('inspectorModalBtn');
+      if (modalBtn) {
+        modalBtn.onclick = () => openMeta(encodeURIComponent(path));
+      }
+
+      // Fetch comprehensive EXIF data from backend
+      try {
+        const res = await fetch(`/api/exif?path=${encodeURIComponent(path)}`);
+        const d = await res.json();
+        if (d && !d.error) {
+          document.getElementById('inspectorFormat').textContent = d.format || 'IMG';
+          document.getElementById('inspectorDimensions').textContent = d.dimensions || '—';
+          document.getElementById('inspectorSize').textContent = (d.size_mb !== undefined) ? `${d.size_mb} MB` : '—';
+          document.getElementById('inspectorCamera').textContent = d.camera || 'Standard / Digital Asset';
+          document.getElementById('inspectorDate').textContent = d.date || '—';
+          
+          const exposureParts = [];
+          if (d.aperture && d.aperture !== 'N/A') exposureParts.push(d.aperture);
+          if (d.shutter && d.shutter !== 'N/A') exposureParts.push(d.shutter);
+          if (d.iso && d.iso !== 'N/A') exposureParts.push(`ISO ${d.iso}`);
+          if (d.focal && d.focal !== 'N/A') exposureParts.push(d.focal);
+          document.getElementById('inspectorExposure').textContent = exposureParts.length > 0 ? exposureParts.join(' • ') : 'Standard / Auto';
+          
+          document.getElementById('inspectorHash').textContent = d.hash || found?.hash || '—';
+        }
+      } catch (err) {
+        console.error('Failed to load image EXIF:', err);
+      }
+    }
+
+    function handleCardClick(encPath) {
+      const p = decodeURIComponent(encPath);
+      toggleSelect(p);
+      inspectImage(p, p === lockedTarget);
     }
 
     function clearTarget() {
       lockedTarget = null;
       document.getElementById('activeTargetBar').classList.add('hidden');
-      loadGrid();
+      document.getElementById('targetInspectorCard').classList.add('hidden');
+      loadGalleryGrid(false);
     }
 
-    async function refresh() {
-      if (lockedTarget && viewMode === 'library') {
+    async function refresh(isInitial = false) {
+      if (lockedTarget) {
         await executeSearch();
       } else {
         document.getElementById('activeTargetBar').classList.add('hidden');
-        await loadGrid();
+        await loadGalleryGrid(isInitial);
       }
     }
 
-    async function loadGrid() {
+    async function loadGalleryGrid(isInitial = false) {
       try {
-        const res = await fetch(`/api/images?mode=${viewMode}`);
+        const res = await fetch('/api/images?mode=library');
         const data = await res.json();
         items = data.items || [];
-        document.getElementById('libCount').textContent = data.total;
-        document.getElementById('binCount').textContent = data.bin_count;
         document.getElementById('resultsCountPill').textContent = `${items.length} Photos`;
-        document.getElementById('gallerySubtitle').textContent = viewMode === 'library' 
-          ? `Indexed across metric space` 
-          : `Staged for restoration or disk deletion`;
+        document.getElementById('topNavBinCount').textContent = `(${data.bin_count || 0})`;
 
-        renderCards(items);
+        renderCards(items, 'galleryGrid', isInitial);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadBinGrid() {
+      try {
+        const res = await fetch('/api/images?mode=bin');
+        const data = await res.json();
+        binItems = data.items || [];
+        document.getElementById('binCountPill').textContent = `${binItems.length} Staged`;
+        document.getElementById('topNavBinCount').textContent = `(${binItems.length})`;
+
+        renderCards(binItems, 'binGrid', false);
       } catch (e) {
         console.error(e);
       }
     }
 
     async function executeSearch() {
-      if (!lockedTarget || viewMode !== 'library') return;
+      if (!lockedTarget) return;
       try {
         const res = await fetch(`/api/search?target=${encodeURIComponent(lockedTarget)}&tolerance=${toleranceRadius}`);
         const d = await res.json();
@@ -662,128 +849,258 @@
         document.getElementById('activeTargetBar').classList.remove('hidden');
         document.getElementById('targetFilename').textContent = lockedTarget.split('/').pop();
 
-        renderCards(items);
-        if (activeStageTab === 'diff') renderDiffStage();
+        renderCards(items, 'galleryGrid', false);
       } catch (e) {
         console.error(e);
       }
     }
 
-    function renderCards(photoItems) {
-      const grid = document.getElementById('galleryGrid');
-      grid.innerHTML = '';
+    // ==========================================
+    // IN-PLACE ANTI-FLICKER CARD RENDERER
+    // ==========================================
+    function renderCards(photoItems, containerId, isNewLoad = false) {
+      const grid = document.getElementById(containerId);
+      if (!grid) return;
 
       if (!photoItems || photoItems.length === 0) {
         grid.innerHTML = `
-          <div class="col-span-full py-24 text-center text-xs font-mono text-zinc-500">
-            Zero photos match this criteria.
+          <div class="col-span-full py-28 text-center text-xs font-mono text-slate-500">
+            Zero photos in this view.
           </div>
         `;
         return;
       }
 
-      photoItems.forEach((p, idx) => {
-        const isSel = selectedSet.has(p.path);
-        const isTgt = (p.path === lockedTarget);
+      // Check if grid already has cards rendered
+      const existingCards = grid.querySelectorAll('.photo-card');
+      const existingPaths = Array.from(existingCards).map(c => c.getAttribute('data-path'));
+      const newPaths = photoItems.map(p => p.path);
 
-        let tagHtml = '';
-        if (isTgt) {
-          tagHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#ffea00] text-black">Target</span>`;
-        } else if (p.similarity !== undefined) {
-          tagHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-black/80 text-zinc-200 border border-[#1f2533]">${p.similarity}% (d=${p.distance})</span>`;
-        }
+      // Same card set: update badges and borders in-place without touching <img> elements!
+      const isSameCardSet = existingCards.length > 0 &&
+        existingPaths.length === newPaths.length &&
+        existingPaths.every((p, i) => p === newPaths[i]);
 
-        const borderClass = isTgt
-          ? 'border-[#ffea00] shadow-[0_0_20px_rgba(255,234,0,0.15)]'
-          : (isSel ? 'border-white' : 'border-[#1f2533] hover:border-zinc-600');
+      if (isSameCardSet) {
+        photoItems.forEach(p => {
+          const card = grid.querySelector(`[data-path="${CSS.escape(p.path)}"]`);
+          if (card) {
+            updateCardInPlace(card, p);
+          }
+        });
+        return;
+      }
 
-        const card = document.createElement('div');
-        card.className = `group rounded-xl border bg-[#10131a] overflow-hidden transition-all duration-200 flex flex-col ${borderClass}`;
-        card.innerHTML = `
-          <div class="relative aspect-[16/10] bg-black overflow-hidden cursor-pointer" onclick="toggleSelect('${escapeStr(p.path)}')">
-            <img src="/api/thumbnail?path=${encodeURIComponent(p.path)}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-            <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-              ${tagHtml}
-            </div>
-            <div class="absolute top-2.5 right-2.5">
-              <input type="checkbox" ${isSel ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${escapeStr(p.path)}')" class="w-4 h-4 rounded bg-black border-zinc-700 accent-[#ffea00] cursor-pointer">
-            </div>
+      // Rebuild cards only when folder changes or search filter changes the list
+      grid.innerHTML = '';
+      photoItems.forEach((p) => {
+        const card = createCardElement(p, containerId === 'binGrid');
+        grid.appendChild(card);
+      });
+
+      // One-time staggered animation on fresh load only
+      if (isNewLoad && !hasAnimatedOnce && window.Motion && window.Motion.animate) {
+        hasAnimatedOnce = true;
+        window.Motion.animate(
+          ".photo-card",
+          { opacity: [0, 1], y: [10, 0] },
+          { delay: window.Motion.stagger(0.02), duration: 0.2 }
+        );
+      }
+    }
+
+    function createCardElement(p, isBin = false) {
+      const isSel = selectedSet.has(p.path);
+      const isTgt = (p.path === lockedTarget);
+
+      let tagHtml = '';
+      if (isTgt) {
+        tagHtml = `<span class="tag-badge px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-blue-600 text-white shadow-sm shadow-blue-600/30">Target Pivot</span>`;
+      } else if (p.similarity !== undefined) {
+        const isExact = (p.distance === 0);
+        const badgeBg = isExact ? 'bg-emerald-950/90 text-emerald-300 border-emerald-700/60' : 'bg-blue-950/80 text-blue-300 border-blue-700/50';
+        tagHtml = `<span class="tag-badge px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${badgeBg} border">${p.similarity}% (d=${p.distance})</span>`;
+      }
+
+      let borderClass = 'border-white/10 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-950/50';
+      if (isTgt) borderClass = 'target-active-glow';
+      else if (isSel) borderClass = 'card-selected-glow ring-2 ring-blue-500/40';
+
+      const card = document.createElement('div');
+      card.className = `photo-card group rounded-xl border bg-[#0e1424] overflow-hidden transition-all duration-150 flex flex-col ${borderClass}`;
+      card.setAttribute('data-path', p.path);
+
+      const encPath = encodeURIComponent(p.path);
+      const dimText = p.dimensions || 'N/A';
+      const sizeText = (p.size_mb !== undefined && p.size_mb !== null) ? `${p.size_mb} MB` : 'N/A';
+      const fmtText = p.format || 'IMG';
+
+      card.innerHTML = `
+        <div class="relative aspect-[16/10] bg-[#05070d] overflow-hidden cursor-pointer" onclick="handleCardClick('${encPath}')">
+          <img src="/api/thumbnail?path=${encPath}" class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105" loading="lazy">
+          <div class="card-badge-container absolute top-2.5 left-2.5 flex items-center gap-1.5 pointer-events-none">
+            ${tagHtml}
           </div>
-          <div class="p-3 border-t border-[#1f2533] flex items-center justify-between text-xs font-mono">
-            <span class="text-zinc-300 truncate max-w-[130px] font-medium" title="${p.filename}">${p.filename}</span>
+          <div class="absolute top-2.5 right-2.5">
+            <input type="checkbox" ${isSel ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${encPath}')" class="w-4 h-4 rounded bg-[#090d16] border-white/20 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600">
+          </div>
+        </div>
+        <div class="p-3 border-t border-white/10 flex flex-col gap-2 font-mono text-xs">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-slate-200 font-semibold truncate text-[11px]" title="${p.filename}">${p.filename}</span>
+            <span class="card-format px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-bold uppercase shrink-0">${fmtText}</span>
+          </div>
+
+          <!-- Direct Metadata Pill Line -->
+          <div class="flex items-center gap-2 text-[10px] text-slate-400">
+            <span class="card-dimensions text-slate-300 font-medium">${dimText}</span>
+            <span>&bull;</span>
+            <span class="card-size text-slate-400">${sizeText}</span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center justify-between pt-1 border-t border-white/5">
+            <button onclick="openMeta('${encPath}')" class="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition cursor-pointer" title="Inspect EXIF / Camera details">
+              <svg class="w-3 h-3 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span>EXIF</span>
+            </button>
             <div class="flex items-center gap-1.5">
-              <button onclick="openMeta('${escapeStr(p.path)}')" class="p-1 text-zinc-500 hover:text-white" title="EXIF">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-              </button>
-              ${viewMode === 'library' ? `
-                <button onclick="lockTarget('${escapeStr(p.path)}')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#171b26] hover:bg-[#ffea00] hover:text-black text-zinc-300 border border-[#1f2533] transition">
+              ${!isBin ? `
+                <button onclick="lockTarget('${encPath}')" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#0a0e1a] hover:bg-blue-600 hover:text-white text-blue-300 border border-blue-500/30 hover:border-blue-500 transition cursor-pointer">
                   Match
                 </button>
-                <button onclick="binSingle('${escapeStr(p.path)}')" class="px-1.5 py-0.5 rounded text-[11px] text-zinc-500 hover:text-red-400 transition" title="Move to Bin">
+                <button onclick="binSingle('${encPath}')" class="px-1.5 py-0.5 rounded text-[11px] text-slate-500 hover:text-rose-400 transition cursor-pointer" title="Move to Bin">
                   &times;
                 </button>
               ` : `
-                <button onclick="restoreSingle('${escapeStr(p.path)}')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-950/80 hover:bg-emerald-600 text-emerald-300 hover:text-black border border-emerald-800/40 transition">
+                <button onclick="restoreSingle('${encPath}')" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-950/80 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-800/40 transition cursor-pointer">
                   Restore
                 </button>
-                <button onclick="deleteSingle('${escapeStr(p.path)}')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-red-950/80 hover:bg-red-600 text-red-300 hover:text-white border border-red-800/40 transition">
+                <button onclick="deleteSingle('${encPath}')" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-950/80 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-800/40 transition cursor-pointer">
                   Delete
                 </button>
               `}
             </div>
           </div>
-        `;
-        grid.appendChild(card);
-      });
+        </div>
+      `;
+      return card;
+    }
 
-      // Framer Motion staggered spring entrance
-      if (window.Motion && window.Motion.animate) {
-        window.Motion.animate(
-          ".group",
-          { opacity: [0, 1], y: [12, 0] },
-          { delay: window.Motion.stagger(0.02), duration: 0.25 }
-        );
+    function updateCardInPlace(card, p) {
+      const isSel = selectedSet.has(p.path);
+      const isTgt = (p.path === lockedTarget);
+
+      card.classList.remove('target-active-glow', 'card-selected-glow', 'ring-2', 'ring-blue-500/40', 'border-white/10');
+      if (isTgt) {
+        card.classList.add('target-active-glow');
+      } else if (isSel) {
+        card.classList.add('card-selected-glow', 'ring-2', 'ring-blue-500/40');
+      } else {
+        card.classList.add('border-white/10');
+      }
+
+      const cb = card.querySelector('input[type="checkbox"]');
+      if (cb) cb.checked = isSel;
+
+      const badgeBox = card.querySelector('.card-badge-container');
+      if (badgeBox) {
+        let tagHtml = '';
+        if (isTgt) {
+          tagHtml = `<span class="tag-badge px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-blue-600 text-white shadow-sm shadow-blue-600/30">Target Pivot</span>`;
+        } else if (p.similarity !== undefined) {
+          const isExact = (p.distance === 0);
+          const badgeBg = isExact ? 'bg-emerald-950/90 text-emerald-300 border-emerald-700/60' : 'bg-blue-950/80 text-blue-300 border-blue-700/50';
+          tagHtml = `<span class="tag-badge px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${badgeBg} border">${p.similarity}% (d=${p.distance})</span>`;
+        }
+        badgeBox.innerHTML = tagHtml;
+      }
+
+      // Update metadata fields if present
+      const dimEl = card.querySelector('.card-dimensions');
+      if (dimEl && p.dimensions) dimEl.textContent = p.dimensions;
+      const sizeEl = card.querySelector('.card-size');
+      if (sizeEl && p.size_mb !== undefined) sizeEl.textContent = `${p.size_mb} MB`;
+      const fmtEl = card.querySelector('.card-format');
+      if (fmtEl && p.format) fmtEl.textContent = p.format;
+    }
+
+    // Direct Instant Selection without DOM Rebuilding
+    function toggleSelect(rawPath) {
+      const p = (typeof rawPath === 'string' && rawPath.includes('%')) ? decodeURIComponent(rawPath) : rawPath;
+      if (selectedSet.has(p)) selectedSet.delete(p);
+      else selectedSet.add(p);
+      
+      updateSelectionUI();
+
+      const card = document.querySelector(`.photo-card[data-path="${CSS.escape(p)}"]`);
+      if (card) {
+        const isSel = selectedSet.has(p);
+        const isTgt = (p === lockedTarget);
+        card.classList.remove('card-selected-glow', 'ring-2', 'ring-blue-500/40', 'border-white/10');
+        if (isTgt) {
+          card.classList.add('target-active-glow');
+        } else if (isSel) {
+          card.classList.add('card-selected-glow', 'ring-2', 'ring-blue-500/40');
+        } else {
+          card.classList.add('border-white/10');
+        }
+
+        const cb = card.querySelector('input[type="checkbox"]');
+        if (cb) cb.checked = isSel;
       }
     }
 
-    function toggleSelect(p) {
-      if (selectedSet.has(p)) selectedSet.delete(p);
-      else selectedSet.add(p);
-      updateSelectionUI();
-      renderCards(items);
-    }
-
     function selectAll() {
-      items.forEach(p => {
+      const activeList = (currentSection === 'bin') ? binItems : items;
+      activeList.forEach(p => {
         if (p.path !== lockedTarget) selectedSet.add(p.path);
       });
       updateSelectionUI();
-      renderCards(items);
+      document.querySelectorAll('.photo-card').forEach(card => {
+        const p = card.getAttribute('data-path');
+        if (p !== lockedTarget) {
+          card.classList.add('card-selected-glow', 'ring-2', 'ring-blue-500/40');
+          const cb = card.querySelector('input[type="checkbox"]');
+          if (cb) cb.checked = true;
+        }
+      });
     }
 
     function deselectAll() {
       selectedSet.clear();
       updateSelectionUI();
-      renderCards(items);
+      document.querySelectorAll('.photo-card').forEach(card => {
+        const p = card.getAttribute('data-path');
+        if (p !== lockedTarget) {
+          card.classList.remove('card-selected-glow', 'ring-2', 'ring-blue-500/40');
+          card.classList.add('border-white/10');
+          const cb = card.querySelector('input[type="checkbox"]');
+          if (cb) cb.checked = false;
+        }
+      });
     }
 
     function updateSelectionUI() {
       const c = selectedSet.size;
       document.getElementById('selCount').textContent = c;
       const btn = document.getElementById('btnBatchBin');
-      if (c > 0) {
-        btn.disabled = false;
-        btn.className = "w-full py-2 text-xs font-bold rounded bg-[#ffea00] hover:bg-[#ffd000] text-black shadow transition cursor-pointer";
-      } else {
-        btn.disabled = true;
-        btn.className = "w-full py-2 text-xs font-bold rounded bg-zinc-900 text-zinc-600 border border-zinc-900 cursor-not-allowed transition";
+      if (btn) {
+        if (c > 0) {
+          btn.disabled = false;
+          btn.className = "w-full py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 transition cursor-pointer";
+        } else {
+          btn.disabled = true;
+          btn.className = "w-full py-2 text-xs font-semibold rounded-lg bg-[#05070d] text-slate-600 border border-white/5 cursor-not-allowed transition";
+        }
       }
     }
 
-    async function binSingle(path) {
+    async function binSingle(rawPath) {
+      const path = (typeof rawPath === 'string' && rawPath.includes('%')) ? decodeURIComponent(rawPath) : rawPath;
       await fetch('/api/bin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: [path] }) });
       await fetchStatus();
-      await refresh();
+      await refresh(false);
     }
 
     async function batchBin() {
@@ -792,13 +1109,14 @@
       selectedSet.clear();
       updateSelectionUI();
       await fetchStatus();
-      await refresh();
+      await refresh(false);
     }
 
-    async function restoreSingle(path) {
+    async function restoreSingle(rawPath) {
+      const path = (typeof rawPath === 'string' && rawPath.includes('%')) ? decodeURIComponent(rawPath) : rawPath;
       await fetch('/api/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: [path] }) });
       await fetchStatus();
-      await refresh();
+      await loadBinGrid();
     }
 
     async function batchRestore() {
@@ -807,14 +1125,15 @@
       selectedSet.clear();
       updateSelectionUI();
       await fetchStatus();
-      await refresh();
+      await loadBinGrid();
     }
 
-    async function deleteSingle(path) {
+    async function deleteSingle(rawPath) {
+      const path = (typeof rawPath === 'string' && rawPath.includes('%')) ? decodeURIComponent(rawPath) : rawPath;
       if (!confirm(`Permanently erase '${path.split('/').pop()}' from disk?`)) return;
       await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: [path] }) });
       await fetchStatus();
-      await refresh();
+      await loadBinGrid();
     }
 
     async function batchDelete() {
@@ -824,31 +1143,34 @@
       selectedSet.clear();
       updateSelectionUI();
       await fetchStatus();
-      await refresh();
+      await loadBinGrid();
     }
 
     async function emptyBin() {
       if (!confirm("Permanently erase all photos in the Recycle Bin?")) return;
       await fetch('/api/empty-bin', { method: 'POST' });
       await fetchStatus();
-      await refresh();
+      await loadBinGrid();
     }
 
     // Modal Helpers
-    async function openMeta(path) {
+    async function openMeta(rawPath) {
       try {
+        const path = (typeof rawPath === 'string' && rawPath.includes('%')) ? decodeURIComponent(rawPath) : rawPath;
         const res = await fetch(`/api/exif?path=${encodeURIComponent(path)}`);
         const d = await res.json();
         document.getElementById('metaFilename').textContent = d.filename;
         document.getElementById('metaImg').src = `/api/raw-image?path=${encodeURIComponent(path)}`;
-        document.getElementById('metaCamera').textContent = d.camera;
-        document.getElementById('metaDimensions').textContent = d.dimensions;
-        document.getElementById('metaSize').textContent = `${d.size_mb} MB (${d.format})`;
-        document.getElementById('metaAperture').textContent = d.aperture;
-        document.getElementById('metaShutter').textContent = d.shutter;
-        document.getElementById('metaIso').textContent = d.iso;
-        document.getElementById('metaDate').textContent = d.date;
-        document.getElementById('metaHash').textContent = d.hash;
+        document.getElementById('metaCamera').textContent = d.camera || 'Standard / Digital Asset';
+        document.getElementById('metaDimensions').textContent = d.dimensions || 'N/A';
+        document.getElementById('metaSize').textContent = `${d.size_mb !== undefined ? d.size_mb : 0} MB (${d.format || 'IMG'})`;
+        document.getElementById('metaAperture').textContent = d.aperture || 'N/A';
+        document.getElementById('metaShutter').textContent = d.shutter || 'N/A';
+        document.getElementById('metaIso').textContent = d.iso || 'N/A';
+        const focalEl = document.getElementById('metaFocal');
+        if (focalEl) focalEl.textContent = d.focal || 'N/A';
+        document.getElementById('metaDate').textContent = d.date || 'N/A';
+        document.getElementById('metaHash').textContent = d.hash || 'N/A';
         document.getElementById('exifModal').classList.remove('hidden');
       } catch (e) {
         console.error(e);
@@ -872,8 +1194,8 @@
 
         const rx = 450, ry = 40;
         let c = `
-          <circle cx="${rx}" cy="${ry}" r="14" fill="#ffea00" />
-          <text x="${rx}" y="${ry + 4}" fill="#000" font-size="10" font-weight="bold" font-family="Geist Mono" text-anchor="middle">Root</text>
+          <circle cx="${rx}" cy="${ry}" r="15" fill="#2563eb" filter="drop-shadow(0 0 14px rgba(37,99,235,0.75))" />
+          <text x="${rx}" y="${ry + 4}" fill="#ffffff" font-size="10" font-weight="bold" font-family="Geist Mono" text-anchor="middle">Root</text>
         `;
 
         const ch = root.children || [];
@@ -885,11 +1207,11 @@
 
             const isP = child.status === 'pruned';
             const isM = child.status === 'match';
-            const col = isM ? '#10b981' : (isP ? '#334155' : '#94a3b8');
+            const col = isM ? '#10b981' : (isP ? '#475569' : '#3b82f6');
             const dash = isP ? 'stroke-dasharray="4"' : '';
 
             c += `<line x1="${rx}" y1="${ry}" x2="${cx}" y2="${cy}" stroke="${col}" stroke-width="1.5" ${dash}/>`;
-            c += `<circle cx="${cx}" cy="${cy}" r="12" fill="${isM ? '#064e3b' : '#14171f'}" stroke="${col}" stroke-width="1.5"/>`;
+            c += `<circle cx="${cx}" cy="${cy}" r="13" fill="${isM ? '#064e3b' : (isP ? '#0e1424' : '#1e3a8a')}" stroke="${col}" stroke-width="1.5"/>`;
             c += `<text x="${cx}" y="${cy + 4}" fill="#f1f5f9" font-size="9" font-family="Geist Mono" text-anchor="middle">d=${child.edge_distance}</text>`;
           });
         }
@@ -898,44 +1220,6 @@
       } catch (e) {
         console.error(e);
       }
-    }
-
-    function renderDiffStage() {
-      const container = document.getElementById('diffContainer');
-      if (!lockedTarget || items.length < 2) {
-        container.innerHTML = `
-          <div class="p-6 rounded-2xl bg-[#10131a] border border-[#1f2533] text-center text-xs text-zinc-500 font-mono py-24 col-span-full">
-            Lock a photo in Library mode to compare side-by-side with detected duplicates.
-          </div>
-        `;
-        return;
-      }
-
-      const dup = items.find(i => i.path !== lockedTarget) || items[1];
-
-      container.innerHTML = `
-        <!-- Target Card -->
-        <div class="rounded-2xl border border-[#ffea00] bg-[#10131a] p-4 space-y-3 font-mono">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-[#ffea00]">Target Pivot (100%)</span>
-            <span class="text-zinc-400">${lockedTarget.split('/').pop()}</span>
-          </div>
-          <div class="h-80 rounded-xl bg-black overflow-hidden flex items-center justify-center border border-zinc-800">
-            <img src="/api/raw-image?path=${encodeURIComponent(lockedTarget)}" class="max-h-full max-w-full object-contain">
-          </div>
-        </div>
-
-        <!-- Matched Duplicate Card -->
-        <div class="rounded-2xl border border-emerald-500 bg-[#10131a] p-4 space-y-3 font-mono">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-emerald-400">Near-Duplicate (${dup.similarity}% Match &bull; d=${dup.distance})</span>
-            <span class="text-zinc-400">${dup.filename}</span>
-          </div>
-          <div class="h-80 rounded-xl bg-black overflow-hidden flex items-center justify-center border border-zinc-800">
-            <img src="/api/raw-image?path=${encodeURIComponent(dup.path)}" class="max-h-full max-w-full object-contain">
-          </div>
-        </div>
-      `;
     }
 
     function capitalize(s) {

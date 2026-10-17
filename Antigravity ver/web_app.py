@@ -26,6 +26,7 @@ STATE = {
     "bktree": BKTree(),
     "all_images": {},     # file_path -> img_hash
     "thumbnails": {},     # file_path -> JPEG bytes
+    "metadata": {},       # file_path -> {dimensions, size_mb, format}
     "recycle_bin": set(), # staged file paths
     "main_target": None,
     "main_hash": None,
@@ -71,6 +72,7 @@ def index_folder(folder_path: str):
     STATE["folder"] = folder_path
     STATE["all_images"].clear()
     STATE["thumbnails"].clear()
+    STATE["metadata"].clear()
     STATE["recycle_bin"].clear()
     STATE["main_target"] = None
     STATE["main_hash"] = None
@@ -86,9 +88,18 @@ def index_folder(folder_path: str):
             STATE["all_images"][fpath] = img_hash
             STATE["bktree"].add(img_hash, fpath)
 
-            # Generate memory-cached thumbnail
+            # Extract basic dimensions, filesize, and generate thumbnail
             try:
+                st = os.stat(fpath)
+                sz = round(st.st_size / (1024 * 1024), 2)
                 with Image.open(fpath) as img:
+                    w, h = img.width, img.height
+                    fmt = img.format or "JPEG"
+                    STATE["metadata"][fpath] = {
+                        "dimensions": f"{w} × {h}",
+                        "size_mb": sz,
+                        "format": fmt,
+                    }
                     img.thumbnail((320, 240))
                     buf = io.BytesIO()
                     img.convert("RGB").save(buf, format="JPEG", quality=80)
@@ -100,7 +111,7 @@ def index_folder(folder_path: str):
 
 
 def get_exif_data(fpath: str) -> dict:
-    """Extracts camera metadata and formatting details."""
+    """Extracts camera metadata and formatting details with full fallback support."""
     out = {
         "filename": os.path.basename(fpath),
         "path": fpath,
@@ -119,45 +130,74 @@ def get_exif_data(fpath: str) -> dict:
         return out
 
     try:
+        import datetime
         stat = os.stat(fpath)
         out["size_mb"] = round(stat.st_size / (1024 * 1024), 2)
+        out["date"] = datetime.datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M")
 
         with Image.open(fpath) as img:
-            out["dimensions"] = f"{img.width} x {img.height} px"
+            out["dimensions"] = f"{img.width} × {img.height} px"
             out["format"] = img.format or "JPEG"
 
-            raw_exif = img.getexif()
-            if raw_exif:
-                exif = {}
-                for tag_id, val in raw_exif.items():
-                    tag_name = ExifTags.TAGS.get(tag_id, tag_id)
-                    exif[tag_name] = val
-                if 0x8769 in raw_exif:
-                    for tag_id, val in raw_exif.get_ifd(0x8769).items():
+            exif = {}
+            # 1. Legacy _getexif (most reliable for camera JPEG tags)
+            if hasattr(img, "_getexif") and callable(img._getexif):
+                legacy_exif = img._getexif()
+                if legacy_exif:
+                    for tag_id, val in legacy_exif.items():
                         tag_name = ExifTags.TAGS.get(tag_id, tag_id)
                         exif[tag_name] = val
 
-                cam = f"{exif.get('Make', '')} {exif.get('Model', '')}".strip()
-                if cam:
-                    out["camera"] = cam
-                out["date"] = exif.get("DateTimeOriginal", exif.get("DateTime", "N/A"))
+            # 2. Modern getexif IFDs
+            raw_exif = img.getexif()
+            if raw_exif:
+                for tag_id, val in raw_exif.items():
+                    tag_name = ExifTags.TAGS.get(tag_id, tag_id)
+                    exif[tag_name] = val
+                if hasattr(raw_exif, "get_ifd"):
+                    try:
+                        for ifd_id in [0x8769, 0x8825]:
+                            for tag_id, val in raw_exif.get_ifd(ifd_id).items():
+                                tag_name = ExifTags.TAGS.get(tag_id, tag_id)
+                                exif[tag_name] = val
+                    except Exception:
+                        pass
 
-                f_num = exif.get("FNumber")
-                if f_num:
+            cam = f"{exif.get('Make', '')} {exif.get('Model', '')}".strip()
+            if cam:
+                out["camera"] = cam
+            else:
+                out["camera"] = "Standard / Digital Asset"
+
+            exif_date = exif.get("DateTimeOriginal") or exif.get("DateTime")
+            if exif_date:
+                out["date"] = str(exif_date)
+
+            f_num = exif.get("FNumber")
+            if f_num:
+                try:
                     out["aperture"] = f"f/{float(f_num):.1f}"
+                except Exception:
+                    pass
 
-                exp = exif.get("ExposureTime")
-                if exp:
+            exp = exif.get("ExposureTime")
+            if exp:
+                try:
                     exp_val = float(exp)
                     out["shutter"] = f"1/{int(round(1/exp_val))}s" if 0 < exp_val < 1 else f"{exp_val}s"
+                except Exception:
+                    pass
 
-                iso = exif.get("ISOSpeedRatings")
-                if iso:
-                    out["iso"] = str(iso)
+            iso = exif.get("ISOSpeedRatings")
+            if iso:
+                out["iso"] = str(iso)
 
-                focal = exif.get("FocalLength")
-                if focal:
+            focal = exif.get("FocalLength")
+            if focal:
+                try:
                     out["focal"] = f"{float(focal):.0f}mm"
+                except Exception:
+                    pass
     except Exception as e:
         print(f"Error parsing EXIF for {fpath}: {e}")
 
@@ -213,20 +253,34 @@ class DeduplicatorHTTPHandler(BaseHTTPRequestHandler):
             items = []
             for fpath, h in STATE["all_images"].items():
                 is_binned = fpath in STATE["recycle_bin"]
+                meta = STATE.get("metadata", {}).get(fpath, {})
+                if not meta and os.path.exists(fpath):
+                    try:
+                        st = os.stat(fpath)
+                        with Image.open(fpath) as im:
+                            meta = {
+                                "dimensions": f"{im.width} × {im.height}",
+                                "size_mb": round(st.st_size / (1024 * 1024), 2),
+                                "format": im.format or "JPEG"
+                            }
+                            STATE.setdefault("metadata", {})[fpath] = meta
+                    except Exception:
+                        meta = {"dimensions": "N/A", "size_mb": 0.0, "format": "IMG"}
+
+                item_info = {
+                    "path": fpath,
+                    "filename": os.path.basename(fpath),
+                    "hash": str(h),
+                    "is_binned": is_binned,
+                    "dimensions": meta.get("dimensions", "N/A"),
+                    "size_mb": meta.get("size_mb", 0.0),
+                    "format": meta.get("format", "IMG"),
+                }
+
                 if view_mode == "bin" and is_binned:
-                    items.append({
-                        "path": fpath,
-                        "filename": os.path.basename(fpath),
-                        "hash": str(h),
-                        "is_binned": True,
-                    })
+                    items.append(item_info)
                 elif view_mode == "library" and not is_binned:
-                    items.append({
-                        "path": fpath,
-                        "filename": os.path.basename(fpath),
-                        "hash": str(h),
-                        "is_binned": False,
-                    })
+                    items.append(item_info)
 
             self._send_json({
                 "items": items,
@@ -290,13 +344,33 @@ class DeduplicatorHTTPHandler(BaseHTTPRequestHandler):
                 if m_path in STATE["recycle_bin"]:
                     continue
                 dist = target_hash - STATE["all_images"][m_path]
-                sim = max(0, 100 - dist)
+                if dist <= 22:
+                    sim = max(0, 100 - dist)
+                else:
+                    sim = max(0, int(round(78 - (dist - 22) * 3.5)))
+                meta = STATE.get("metadata", {}).get(m_path, {})
+                if not meta and os.path.exists(m_path):
+                    try:
+                        st = os.stat(m_path)
+                        with Image.open(m_path) as im:
+                            meta = {
+                                "dimensions": f"{im.width} × {im.height}",
+                                "size_mb": round(st.st_size / (1024 * 1024), 2),
+                                "format": im.format or "JPEG"
+                            }
+                            STATE.setdefault("metadata", {})[m_path] = meta
+                    except Exception:
+                        meta = {"dimensions": "N/A", "size_mb": 0.0, "format": "IMG"}
+
                 results.append({
                     "path": m_path,
                     "filename": os.path.basename(m_path),
                     "distance": dist,
                     "similarity": sim,
                     "is_target": (m_path == target_path),
+                    "dimensions": meta.get("dimensions", "N/A"),
+                    "size_mb": meta.get("size_mb", 0.0),
+                    "format": meta.get("format", "IMG"),
                 })
 
             # Sort: target first, then smallest distance

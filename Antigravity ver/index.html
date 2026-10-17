@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Motion DSA — Burkhard-Keller Metric Tree Studio</title>
+  
+  <!-- Geist Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+
+  <!-- Official Motion Library (by Matt Perry / motion.dev) -->
+  <script src="https://cdn.jsdelivr.net/npm/motion@11.11.17/dist/motion.js"></script>
+
+  <style>
+    :root {
+      --bg-canvas: #0a0c10;
+      --bg-panel: #10131a;
+      --bg-subtle: #171b26;
+      --border-subtle: #1f2533;
+      --border-strong: #2c3549;
+      --motion-yellow: #ffea00;
+      --motion-yellow-hover: #ffd000;
+    }
+    body {
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-canvas);
+      color: #f1f5f9;
+    }
+    .font-mono {
+      font-family: 'Geist Mono', monospace;
+    }
+    /* Dot Matrix Playground Grid (exact motion.dev hero style) */
+    .motion-grid {
+      background-size: 24px 24px;
+      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    }
+    /* Hairline Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #262c3d; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b445c; }
+    
+    /* Sleek Range Slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #1f2533;
+      height: 3px;
+      border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      background: var(--motion-yellow);
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(255, 234, 0, 0.5);
+      transition: transform 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-[#ffea00] selection:text-black">
+
+  <!-- ========================================== -->
+  <!-- 1. MOTION.DEV TOP NAVIGATION BAR          -->
+  <!-- ========================================== -->
+  <header class="border-b border-[#1f2533] bg-[#0a0c10]/95 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
+    <div class="max-w-[1600px] mx-auto flex items-center justify-between gap-6">
+      
+      <!-- Brand Logo in Motion.dev style -->
+      <div class="flex items-center gap-6">
+        <a href="/" class="flex items-center gap-2 group">
+          <div class="flex items-center gap-1 font-bold text-lg tracking-tighter text-white">
+            <span class="text-[#ffea00] font-black group-hover:scale-110 transition-transform">///·</span>
+            <span>Motion</span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-[#1f2533] text-zinc-400 font-mono font-medium ml-1">DSA</span>
+          </div>
+        </a>
+
+        <!-- Top Menu Tabs -->
+        <nav class="hidden md:flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <button onclick="setStageTab('gallery')" id="topNavGallery" class="px-3 py-1.5 rounded-md text-white bg-[#171b26] transition-colors">
+            Gallery Studio
+          </button>
+          <button onclick="setStageTab('tree')" id="topNavTree" class="px-3 py-1.5 rounded-md hover:text-white transition-colors">
+            Metric Tree
+          </button>
+          <button onclick="setStageTab('diff')" id="topNavDiff" class="px-3 py-1.5 rounded-md hover:text-white transition-colors">
+            Loupe Diff
+          </button>
+          <button onclick="setStageTab('viva')" id="topNavViva" class="px-3 py-1.5 rounded-md hover:text-white transition-colors">
+            Viva Proofs
+          </button>
+        </nav>
+      </div>
+
+      <!-- Right CTAs & Directory Status -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-2 text-xs font-mono text-zinc-400 px-3 py-1 rounded bg-[#10131a] border border-[#1f2533]">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span id="folderLabel" class="truncate max-w-xs">No folder mounted</span>
+        </div>
+
+        <button onclick="loadDemoDataset()" class="px-3 py-2 text-xs font-semibold rounded bg-[#171b26] hover:bg-[#1f2533] border border-[#2c3549] text-amber-300 transition-all duration-150 active:scale-95 flex items-center gap-2" title="Load bundled sample duplicate & near-duplicate dataset">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span>Load Demo Dataset</span>
+        </button>
+
+        <button onclick="browseFolder()" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded bg-[#ffea00] hover:bg-[#ffd000] text-black shadow-lg shadow-yellow-500/10 transition-all duration-150 active:scale-95 flex items-center gap-2">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+          </svg>
+          <span>Mount Directory</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- 2. STUDIO DOCK & MAIN WORKSPACE            -->
+  <!-- ========================================== -->
+  <div class="flex-1 max-w-[1600px] w-full mx-auto flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-[#1f2533]">
+
+    <!-- ========================================== -->
+    <!-- LEFT SIDEBAR: CONTROLS & TELEMETRY         -->
+    <!-- ========================================== -->
+    <aside class="w-full lg:w-80 shrink-0 bg-[#0a0c10] p-6 space-y-6 overflow-y-auto">
+      
+      <!-- View Segmented Switcher -->
+      <div class="space-y-2">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">Workspace Modes</span>
+        <div class="grid grid-cols-2 p-1 bg-[#10131a] rounded-lg border border-[#1f2533] text-xs font-semibold">
+          <button id="sideTabLib" onclick="setViewMode('library')" class="py-2 rounded bg-[#ffea00] text-black transition-all font-bold">
+            Active (<span id="libCount">0</span>)
+          </button>
+          <button id="sideTabBin" onclick="setViewMode('bin')" class="py-2 rounded text-zinc-400 hover:text-white transition-all">
+            Recycle Bin (<span id="binCount">0</span>)
+          </button>
+        </div>
+      </div>
+
+      <!-- Sensitivity Slider Control (Library Only) -->
+      <div id="sideToleranceControl" class="space-y-3 p-4 rounded-xl bg-[#10131a] border border-[#1f2533]">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-white">Metric Radius (&tau;)</span>
+          <span id="radiusPill" class="px-2 py-0.5 rounded font-mono text-[11px] font-bold bg-[#ffea00]/15 text-[#ffea00] border border-[#ffea00]/30">
+            14 (&ge;86%)
+          </span>
+        </div>
+
+        <input id="toleranceSlider" type="range" min="0" max="35" value="14" oninput="onToleranceInput(this.value)" class="w-full">
+
+        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-500">
+          <span>0 (Exact)</span>
+          <span class="text-emerald-400">14 (Strict)</span>
+          <span>35 (Loose)</span>
+        </div>
+
+        <!-- Presets -->
+        <div class="grid grid-cols-3 gap-1.5 pt-1">
+          <button type="button" onclick="setPreset(14)" class="py-1 px-1.5 rounded text-[10px] font-mono font-bold bg-[#171b26] hover:bg-[#ffea00] hover:text-black text-zinc-300 border border-[#1f2533] transition-colors text-center">
+            Strict &le;14
+          </button>
+          <button type="button" onclick="setPreset(17)" class="py-1 px-1.5 rounded text-[10px] font-mono font-bold bg-[#171b26] hover:bg-[#ffea00] hover:text-black text-zinc-300 border border-[#1f2533] transition-colors text-center">
+            Burst &le;17
+          </button>
+          <button type="button" onclick="setPreset(24)" class="py-1 px-1.5 rounded text-[10px] font-mono font-bold bg-[#171b26] hover:bg-[#ffea00] hover:text-black text-zinc-300 border border-[#1f2533] transition-colors text-center">
+            Broad &le;24
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Card (Linear Style) -->
+      <div class="p-4 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-3 font-mono text-xs">
+        <div class="flex items-center justify-between pb-2 border-b border-[#1f2533]">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Algorithmic Engine</span>
+          <span id="speedupTag" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Ready
+          </span>
+        </div>
+
+        <div class="space-y-1.5 text-[11px]">
+          <div class="flex justify-between">
+            <span class="text-zinc-500">BK-Tree Search:</span>
+            <span id="bktreeTime" class="text-white font-bold">— ms</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-zinc-500">Exhaustive O(N):</span>
+            <span id="linearTime" class="text-zinc-400 font-bold">— ms</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-zinc-500">Pruning Ratio:</span>
+            <span id="pruningRatio" class="text-[#ffea00] font-bold">— %</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-zinc-500">Subtree Skips:</span>
+            <span id="nodesVisitedText" class="text-zinc-300">— / —</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-zinc-500">Tree Height:</span>
+            <span id="treeHeight" class="text-cyan-300 font-bold">0 levels</span>
+          </div>
+        </div>
+
+        <button onclick="setStageTab('viva')" class="w-full py-1.5 rounded bg-[#171b26] hover:bg-[#1f2533] text-zinc-300 text-[11px] font-mono text-center border border-[#1f2533] transition">
+          View Mathematical Proof &rarr;
+        </button>
+      </div>
+
+      <!-- Batch Actions -->
+      <div class="space-y-2">
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">Batch Operations</span>
+        
+        <div class="flex gap-2">
+          <button onclick="selectAll()" class="flex-1 py-1.5 text-xs font-semibold rounded bg-[#10131a] hover:bg-[#171b26] text-zinc-300 border border-[#1f2533] transition">
+            Select All
+          </button>
+          <button onclick="deselectAll()" class="flex-1 py-1.5 text-xs font-semibold rounded bg-[#10131a] hover:bg-[#171b26] text-zinc-300 border border-[#1f2533] transition">
+            Deselect
+          </button>
+        </div>
+
+        <!-- Library Batch Controls -->
+        <div id="libBatchActions" class="space-y-2">
+          <button id="btnBatchBin" onclick="batchBin()" disabled class="w-full py-2 text-xs font-bold rounded bg-zinc-900 text-zinc-600 border border-zinc-900 cursor-not-allowed transition">
+            Stage Selected to Bin (<span id="selCount">0</span>)
+          </button>
+        </div>
+
+        <!-- Bin Batch Controls -->
+        <div id="binBatchActions" class="hidden space-y-2">
+          <button onclick="batchRestore()" class="w-full py-2 text-xs font-bold rounded bg-emerald-600 hover:bg-emerald-500 text-black shadow transition">
+            Restore Selected
+          </button>
+          <button onclick="batchDelete()" class="w-full py-2 text-xs font-bold rounded bg-red-600 hover:bg-red-500 text-white shadow transition">
+            Erase Permanently
+          </button>
+          <button onclick="emptyBin()" class="w-full py-2 text-xs font-bold rounded bg-[#171b26] hover:bg-red-950 text-red-300 border border-red-900/50 transition">
+            Empty Recycle Bin
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- RIGHT MAIN STAGE: THE INTERACTIVE CANVAS   -->
+    <!-- ========================================== -->
+    <main class="flex-1 p-6 lg:p-8 space-y-6 overflow-x-hidden">
+
+      <!-- Active Cluster Filter Bar -->
+      <div id="activeTargetBar" class="hidden rounded-xl bg-[#10131a] border border-[#ffea00]/40 p-4 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#ffea00] animate-ping"></span>
+          <div>
+            <span class="text-zinc-400 font-mono text-[11px] uppercase tracking-wider block">Target Pivot Locked</span>
+            <span id="targetFilename" class="text-white font-bold font-mono text-sm">None</span>
+          </div>
+        </div>
+        <button onclick="clearTarget()" class="px-3 py-1.5 rounded-lg bg-[#171b26] hover:bg-[#1f2533] text-zinc-300 text-xs font-semibold border border-[#1f2533] transition">
+          Clear Cluster &times;
+        </button>
+      </div>
+
+      <!-- TAB 1: GALLERY CLUSTER VIEW -->
+      <div id="stageGallery" class="space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-[#1f2533]">
+          <div>
+            <h2 id="galleryTitle" class="text-base font-bold text-white tracking-tight">Image Collection</h2>
+            <p id="gallerySubtitle" class="text-xs text-zinc-500 font-mono">Showing unindexed photos</p>
+          </div>
+          <span id="resultsCountPill" class="text-xs font-mono font-semibold text-zinc-400 px-2.5 py-1 rounded bg-[#10131a] border border-[#1f2533]">
+            0 Items
+          </span>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div class="col-span-full py-28 text-center space-y-3">
+            <div class="w-12 h-12 rounded-xl bg-[#10131a] border border-[#1f2533] mx-auto flex items-center justify-center text-[#ffea00]">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                <circle cx="9" cy="9" r="2"/>
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold text-white">No Directory Mounted</h3>
+            <p class="text-xs text-zinc-500 max-w-sm mx-auto">Mount an image directory using the button above to index hashes into the Burkhard-Keller metric tree.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: INTERACTIVE BK-TREE TOPOLOGY -->
+      <div id="stageTree" class="hidden space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-[#1f2533]">
+          <div>
+            <h2 class="text-base font-bold text-white tracking-tight">Interactive Metric Tree Topology</h2>
+            <p class="text-xs text-zinc-500 font-mono">Visualizing sub-linear branch pruning via Triangle Inequality bounds</p>
+          </div>
+          <button onclick="renderTreeSvg()" class="px-3 py-1 rounded bg-[#171b26] hover:bg-[#1f2533] text-xs font-mono text-zinc-300 border border-[#1f2533]">
+            Re-center Graph
+          </button>
+        </div>
+
+        <div class="rounded-2xl border border-[#1f2533] bg-[#0a0c10] p-6 motion-grid relative min-h-[460px] overflow-auto flex items-center justify-center">
+          <svg id="treeSvg" class="w-full h-[400px]" viewBox="0 0 900 380"></svg>
+        </div>
+
+        <!-- Metric Proof Footer -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+          <div class="p-4 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-1">
+            <span class="text-white font-bold block">&bull; Pivot Node</span>
+            <p class="text-zinc-500 text-[11px]">The subtree root acting as distance metric anchor $R$.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-1">
+            <span class="text-emerald-400 font-bold block">&bull; Matched Branch</span>
+            <p class="text-zinc-500 text-[11px]">Branches within interval $d \in [d(Q, R) - \tau, d(Q, R) + \tau]$.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-1">
+            <span class="text-zinc-500 font-bold block">&bull; Pruned Subtree</span>
+            <p class="text-zinc-500 text-[11px]">Branches outside the metric bounds are skipped in $O(1)$.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: SIDE-BY-SIDE LOUPE DIFF -->
+      <div id="stageDiff" class="hidden space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-[#1f2533]">
+          <div>
+            <h2 class="text-base font-bold text-white tracking-tight">Synchronized Loupe Inspection</h2>
+            <p class="text-xs text-zinc-500 font-mono">Side-by-side comparative examination of burst-shot camera shifts</p>
+          </div>
+        </div>
+
+        <div id="diffContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="p-6 rounded-2xl bg-[#10131a] border border-[#1f2533] text-center text-xs text-zinc-500 font-mono py-24 col-span-full">
+            Select a photo and click "Match" to lock a target for comparative diff inspection.
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: MATHEMATICAL VIVA PROOFS -->
+      <div id="stageViva" class="hidden space-y-4">
+        <div class="pb-2 border-b border-[#1f2533]">
+          <h2 class="text-base font-bold text-white tracking-tight">Academic Rigor &amp; Viva Voce Guide</h2>
+          <p class="text-xs text-zinc-500 font-mono">Formal mathematical proofs of metric tree pruning and complexity bounds</p>
+        </div>
+
+        <div class="space-y-4 text-xs font-mono">
+          <div class="p-5 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-3">
+            <span class="text-sm font-bold text-[#ffea00] block">Theorem: Correctness of Triangle Inequality Pruning</span>
+            <p class="text-zinc-300 leading-relaxed">
+              Let $M = (X, d)$ be a discrete metric space with elements $Q, P, C \in X$ where $Q$ is the search query, $P$ is the current pivot node, and $C$ is a child node connected by an edge of weight $d(P, C)$.
+            </p>
+            <div class="p-4 rounded-lg bg-black border border-zinc-800 text-zinc-200 space-y-1">
+              <p>By the Triangle Inequality Axiom:</p>
+              <p class="text-emerald-400">1. d(Q, P) &le; d(Q, C) + d(P, C) &rArr; d(Q, C) &ge; |d(Q, P) - d(P, C)|</p>
+              <p class="text-emerald-400">2. d(Q, C) &le; d(Q, P) + d(P, C)</p>
+              <p class="pt-2 text-zinc-400">Therefore: |d(Q, P) - d(P, C)| &le; d(Q, C) &le; d(Q, P) + d(P, C)</p>
+            </div>
+            <p class="text-zinc-400 leading-relaxed">
+              For any target tolerance $\tau$, the child subtree can contain a candidate $d(Q, C) \le \tau$ <strong>only if</strong> the edge weight satisfies:
+              <br><strong class="text-white">d(Q, P) - &tau; &le; d(P, C) &le; d(Q, P) + &tau;</strong>.
+              <br>Any edge outside this closed interval is mathematically guaranteed to contain zero matches and is safely pruned.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-xl bg-[#10131a] border border-[#1f2533] space-y-2">
+            <span class="text-sm font-bold text-white block">Complexity Formulation</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+              <div class="p-3 rounded bg-black border border-zinc-800">
+                <span class="text-zinc-500 block text-[10px]">CONSTRUCTION</span>
+                <span class="text-white font-bold text-sm">O(N log N)</span>
+              </div>
+              <div class="p-3 rounded bg-black border border-zinc-800">
+                <span class="text-zinc-500 block text-[10px]">RANGE QUERY</span>
+                <span class="text-emerald-400 font-bold text-sm">O(N<sup>&alpha;</sup>), &alpha; &lt; 1</span>
+              </div>
+              <div class="p-3 rounded bg-black border border-zinc-800">
+                <span class="text-zinc-500 block text-[10px]">SPACE OVERHEAD</span>
+                <span class="text-cyan-400 font-bold text-sm">O(N) nodes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. METADATA & EXIF INSPECTION MODAL        -->
+  <!-- ========================================== -->
+  <div id="exifModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-6">
+    <div class="bg-[#10131a] border border-[#1f2533] rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col font-mono text-xs">
+      <div class="flex items-center justify-between border-b border-[#1f2533] pb-3">
+        <div>
+          <h2 id="metaFilename" class="text-sm font-bold text-white">Metadata Inspector</h2>
+          <span class="text-[11px] text-zinc-500">EXIF parameters &amp; metric vector</span>
+        </div>
+        <button onclick="toggleExifModal()" class="text-zinc-400 hover:text-white text-lg p-1">&times;</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 overflow-y-auto">
+        <div class="h-56 rounded-xl bg-black border border-zinc-800 overflow-hidden flex items-center justify-center">
+          <img id="metaImg" src="" class="max-h-full max-w-full object-contain">
+        </div>
+
+        <div class="space-y-1.5 text-zinc-300">
+          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Camera</span><span id="metaCamera" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Resolution</span><span id="metaDimensions" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Filesize</span><span id="metaSize" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Aperture</span><span id="metaAperture" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Shutter</span><span id="metaShutter" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">ISO</span><span id="metaIso" class="text-white">N/A</span></div>
+          <div class="flex justify-between border-b border-zinc-800/80 pb-1"><span class="text-zinc-500">Captured</span><span id="metaDate" class="text-white">N/A</span></div>
+          <div class="pt-2">
+            <span class="text-zinc-500 block mb-1">100-Bit Metric Hash:</span>
+            <div id="metaHash" class="p-2 rounded bg-black border border-zinc-800 text-[#ffea00] text-[10px] break-all select-all"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. JAVASCRIPT LOGIC & MOTION ANIMATION     -->
+  <!-- ========================================== -->
+  <script>
+    let viewMode = "library";
+    let activeStageTab = "gallery";
+    let lockedTarget = null;
+    let toleranceRadius = 14;
+    let items = [];
+    let selectedSet = new Set();
+
+    async function init() {
+      await fetchStatus();
+      await refresh();
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (data.folder) {
+          document.getElementById('folderLabel').textContent = data.folder;
+          document.getElementById('libCount').textContent = data.active_images;
+          document.getElementById('binCount').textContent = data.bin_count;
+          if (data.tree_stats) {
+            document.getElementById('treeHeight').textContent = `${data.tree_stats.height || 0} levels`;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function browseFolder() {
+      try {
+        const res = await fetch('/api/browse-folder', { method: 'POST' });
+        const d = await res.json();
+        if (d.success) {
+          lockedTarget = null;
+          selectedSet.clear();
+          await fetchStatus();
+          await refresh();
+        } else {
+          // Fallback: allow manual folder path entry if OS dialog was cancelled or unavailable
+          const manual = prompt("Enter folder path to index (or leave empty to cancel):", "sample_images");
+          if (manual && manual.trim()) {
+            await loadFolder(manual.trim());
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadDemoDataset() {
+      try {
+        const res = await fetch('/api/load-demo', { method: 'POST' });
+        const d = await res.json();
+        if (d.success) {
+          lockedTarget = null;
+          selectedSet.clear();
+          await fetchStatus();
+          await refresh();
+        } else {
+          alert("Could not load demo dataset: " + (d.message || "Directory not found"));
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Error requesting demo dataset from server.");
+      }
+    }
+
+    async function loadFolder(targetPath) {
+      try {
+        const res = await fetch('/api/load-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder: targetPath })
+        });
+        const d = await res.json();
+        if (d.success) {
+          lockedTarget = null;
+          selectedSet.clear();
+          await fetchStatus();
+          await refresh();
+        } else {
+          alert("Could not mount folder: " + (d.message || "Invalid path"));
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Error sending folder mount request.");
+      }
+    }
+
+    function setViewMode(mode) {
+      viewMode = mode;
+      selectedSet.clear();
+      updateSelectionUI();
+
+      const btnLib = document.getElementById('sideTabLib');
+      const btnBin = document.getElementById('sideTabBin');
+      const tolBox = document.getElementById('sideToleranceControl');
+      const binBox = document.getElementById('binBox');
+      const libBatch = document.getElementById('libBatchActions');
+      const binBatch = document.getElementById('binBatchActions');
+
+      if (mode === 'library') {
+        btnLib.className = "py-2 rounded bg-[#ffea00] text-black transition-all font-bold";
+        btnBin.className = "py-2 rounded text-zinc-400 hover:text-white transition-all";
+        tolBox.classList.remove('hidden');
+        libBatch.classList.remove('hidden');
+        binBatch.classList.add('hidden');
+        document.getElementById('galleryTitle').textContent = "Active Photo Library";
+      } else {
+        // Recycle Bin Mode: clear active target filter
+        lockedTarget = null;
+        document.getElementById('activeTargetBar').classList.add('hidden');
+        btnBin.className = "py-2 rounded bg-[#ffea00] text-black transition-all font-bold";
+        btnLib.className = "py-2 rounded text-zinc-400 hover:text-white transition-all";
+        tolBox.classList.add('hidden');
+        libBatch.classList.add('hidden');
+        binBatch.classList.remove('hidden');
+        document.getElementById('galleryTitle').textContent = "Internal Recycle Bin";
+      }
+
+      refresh();
+    }
+
+    function setStageTab(tab) {
+      activeStageTab = tab;
+      const tabs = ['gallery', 'tree', 'diff', 'viva'];
+      tabs.forEach(t => {
+        const stageEl = document.getElementById(`stage${capitalize(t)}`);
+        const navEl = document.getElementById(`topNav${capitalize(t)}`);
+        if (t === tab) {
+          stageEl.classList.remove('hidden');
+          navEl.className = "px-3 py-1.5 rounded-md text-white bg-[#171b26] transition-colors";
+        } else {
+          stageEl.classList.add('hidden');
+          navEl.className = "px-3 py-1.5 rounded-md hover:text-white transition-colors";
+        }
+      });
+
+      if (tab === 'tree') {
+        renderTreeSvg();
+      } else if (tab === 'diff') {
+        renderDiffStage();
+      }
+    }
+
+    function setPreset(val) {
+      if (viewMode !== 'library') return;
+      document.getElementById('toleranceSlider').value = val;
+      onToleranceInput(val);
+    }
+
+    function onToleranceInput(val) {
+      if (viewMode !== 'library') return;
+      toleranceRadius = parseInt(val);
+
+      const pill = document.getElementById('radiusPill');
+      const sim = 100 - toleranceRadius;
+      pill.textContent = `${toleranceRadius} (≥${sim}%)`;
+
+      if (lockedTarget) {
+        executeSearch();
+      }
+    }
+
+    async function lockTarget(path) {
+      lockedTarget = path;
+      await executeSearch();
+    }
+
+    function clearTarget() {
+      lockedTarget = null;
+      document.getElementById('activeTargetBar').classList.add('hidden');
+      loadGrid();
+    }
+
+    async function refresh() {
+      if (lockedTarget && viewMode === 'library') {
+        await executeSearch();
+      } else {
+        document.getElementById('activeTargetBar').classList.add('hidden');
+        await loadGrid();
+      }
+    }
+
+    async function loadGrid() {
+      try {
+        const res = await fetch(`/api/images?mode=${viewMode}`);
+        const data = await res.json();
+        items = data.items || [];
+        document.getElementById('libCount').textContent = data.total;
+        document.getElementById('binCount').textContent = data.bin_count;
+        document.getElementById('resultsCountPill').textContent = `${items.length} Photos`;
+        document.getElementById('gallerySubtitle').textContent = viewMode === 'library' 
+          ? `Indexed across metric space` 
+          : `Staged for restoration or disk deletion`;
+
+        renderCards(items);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function executeSearch() {
+      if (!lockedTarget || viewMode !== 'library') return;
+      try {
+        const res = await fetch(`/api/search?target=${encodeURIComponent(lockedTarget)}&tolerance=${toleranceRadius}`);
+        const d = await res.json();
+        if (d.error) return;
+
+        items = d.matches || [];
+
+        // Telemetry Update
+        const b = d.benchmark || {};
+        document.getElementById('bktreeTime').textContent = `${(b.bktree_time_ms || 0.001).toFixed(3)} ms`;
+        document.getElementById('linearTime').textContent = `Linear O(N): ${(b.linear_scan_time_ms || 0.001).toFixed(3)} ms`;
+        document.getElementById('pruningRatio').textContent = `${(b.pruning_ratio || 0).toFixed(1)} %`;
+        document.getElementById('nodesVisitedText').textContent = `${b.nodes_visited} / ${b.total_nodes}`;
+        document.getElementById('speedupTag').textContent = `${(b.speedup || 1.0).toFixed(1)}× faster`;
+        document.getElementById('resultsCountPill').textContent = `${items.length} Matches`;
+
+        // Filter Bar
+        document.getElementById('activeTargetBar').classList.remove('hidden');
+        document.getElementById('targetFilename').textContent = lockedTarget.split('/').pop();
+
+        renderCards(items);
+        if (activeStageTab === 'diff') renderDiffStage();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderCards(photoItems) {
+      const grid = document.getElementById('galleryGrid');
+      grid.innerHTML = '';
+
+      if (!photoItems || photoItems.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-24 text-center text-xs font-mono text-zinc-500">
+            Zero photos match this criteria.
+          </div>
+        `;
+        return;
+      }
+
+      photoItems.forEach((p, idx) => {
+        const isSel = selectedSet.has(p.path);
+        const isTgt = (p.path === lockedTarget);
+
+        let tagHtml = '';
+        if (isTgt) {
+          tagHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#ffea00] text-black">Target</span>`;
+        } else if (p.similarity !== undefined) {
+          tagHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-black/80 text-zinc-200 border border-[#1f2533]">${p.similarity}% (d=${p.distance})</span>`;
+        }
+
+        const borderClass = isTgt
+          ? 'border-[#ffea00] shadow-[0_0_20px_rgba(255,234,0,0.15)]'
+          : (isSel ? 'border-white' : 'border-[#1f2533] hover:border-zinc-600');
+
+        const card = document.createElement('div');
+        card.className = `group rounded-xl border bg-[#10131a] overflow-hidden transition-all duration-200 flex flex-col ${borderClass}`;
+        card.innerHTML = `
+          <div class="relative aspect-[16/10] bg-black overflow-hidden cursor-pointer" onclick="toggleSelect('${escapeStr(p.path)}')">
+            <img src="/api/thumbnail?path=${encodeURIComponent(p.path)}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+            <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+              ${tagHtml}
+            </div>
+            <div class="absolute top-2.5 right-2.5">
+              <input type="checkbox" ${isSel ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${escapeStr(p.path)}')" class="w-4 h-4 rounded bg-black border-zinc-700 accent-[#ffea00] cursor-pointer">
+            </div>
+          </div>
+          <div class="p-3 border-t border-[#1f2533] flex items-center justify-between text-xs font-mono">
+            <span class="text-zinc-300 truncate max-w-[130px] font-medium" title="${p.filename}">${p.filename}</span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="openMeta('${escapeStr(p.path)}')" class="p-1 text-zinc-500 hover:text-white" title="EXIF">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              </button>
+              ${viewMode === 'library' ? `
+                <button onclick="lockTarget('${escapeStr(p.path)}')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#171b26] hover:bg-[#ffea00] hover:text-black text-zinc-300 border border-[#1f2533] transition">
+                  Match
+                </button>
+                <button onclick="binSingle('${escapeStr(p.path)}')" class="px-1.5 py-0.5 rounded text-[11px] text-zinc-500 hover:text-red-400 transition" title="Move to Bin">
+                  &times;
+                </button>
+              ` : `
+                <button onclick="restoreSingle('${escapeStr(p.path)}')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-950/80 hover:bg-emerald-600 text-emerald-300 hover:text-black border border-emerald-800/40 transition">
+                  Restore
+                </button>
+                <button onclick="deleteSingle('${escapeStr(p.path)}')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-red-950/80 hover:bg-red-600 text-red-300 hover:text-white border border-red-800/40 transition">
+                  Delete
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      // Framer Motion staggered spring entrance
+      if (window.Motion && window.Motion.animate) {
+        window.Motion.animate(
+          ".group",
+          { opacity: [0, 1], y: [12, 0] },
+          { delay: window.Motion.stagger(0.02), duration: 0.25 }
+        );
+      }
+    }
+
+    function toggleSelect(p) {
+      if (selectedSet.has(p)) selectedSet.delete(p);
+      else selectedSet.add(p);
+      updateSelectionUI();
+      renderCards(items);
+    }
+
+    function selectAll() {
+      items.forEach(p => {
+        if (p.path !== lockedTarget) selectedSet.add(p.path);
+      });
+      updateSelectionUI();
+      renderCards(items);
+    }
+
+    function deselectAll() {
+      selectedSet.clear();
+      updateSelectionUI();
+      renderCards(items);
+    }
+
+    function updateSelectionUI() {
+      const c = selectedSet.size;
+      document.getElementById('selCount').textContent = c;
+      const btn = document.getElementById('btnBatchBin');
+      if (c > 0) {
+        btn.disabled = false;
+        btn.className = "w-full py-2 text-xs font-bold rounded bg-[#ffea00] hover:bg-[#ffd000] text-black shadow transition cursor-pointer";
+      } else {
+        btn.disabled = true;
+        btn.className = "w-full py-2 text-xs font-bold rounded bg-zinc-900 text-zinc-600 border border-zinc-900 cursor-not-allowed transition";
+      }
+    }
+
+    async function binSingle(path) {
+      await fetch('/api/bin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: [path] }) });
+      await fetchStatus();
+      await refresh();
+    }
+
+    async function batchBin() {
+      if (selectedSet.size === 0) return;
+      await fetch('/api/bin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: Array.from(selectedSet) }) });
+      selectedSet.clear();
+      updateSelectionUI();
+      await fetchStatus();
+      await refresh();
+    }
+
+    async function restoreSingle(path) {
+      await fetch('/api/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: [path] }) });
+      await fetchStatus();
+      await refresh();
+    }
+
+    async function batchRestore() {
+      if (selectedSet.size === 0) return;
+      await fetch('/api/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: Array.from(selectedSet) }) });
+      selectedSet.clear();
+      updateSelectionUI();
+      await fetchStatus();
+      await refresh();
+    }
+
+    async function deleteSingle(path) {
+      if (!confirm(`Permanently erase '${path.split('/').pop()}' from disk?`)) return;
+      await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: [path] }) });
+      await fetchStatus();
+      await refresh();
+    }
+
+    async function batchDelete() {
+      if (selectedSet.size === 0) return;
+      if (!confirm(`Permanently erase ${selectedSet.size} photo(s)? This cannot be undone.`)) return;
+      await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: Array.from(selectedSet) }) });
+      selectedSet.clear();
+      updateSelectionUI();
+      await fetchStatus();
+      await refresh();
+    }
+
+    async function emptyBin() {
+      if (!confirm("Permanently erase all photos in the Recycle Bin?")) return;
+      await fetch('/api/empty-bin', { method: 'POST' });
+      await fetchStatus();
+      await refresh();
+    }
+
+    // Modal Helpers
+    async function openMeta(path) {
+      try {
+        const res = await fetch(`/api/exif?path=${encodeURIComponent(path)}`);
+        const d = await res.json();
+        document.getElementById('metaFilename').textContent = d.filename;
+        document.getElementById('metaImg').src = `/api/raw-image?path=${encodeURIComponent(path)}`;
+        document.getElementById('metaCamera').textContent = d.camera;
+        document.getElementById('metaDimensions').textContent = d.dimensions;
+        document.getElementById('metaSize').textContent = `${d.size_mb} MB (${d.format})`;
+        document.getElementById('metaAperture').textContent = d.aperture;
+        document.getElementById('metaShutter').textContent = d.shutter;
+        document.getElementById('metaIso').textContent = d.iso;
+        document.getElementById('metaDate').textContent = d.date;
+        document.getElementById('metaHash').textContent = d.hash;
+        document.getElementById('exifModal').classList.remove('hidden');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function toggleExifModal() {
+      document.getElementById('exifModal').classList.toggle('hidden');
+    }
+
+    async function renderTreeSvg() {
+      const svg = document.getElementById('treeSvg');
+      svg.innerHTML = '';
+      try {
+        const res = await fetch(`/api/tree-graph?target=${encodeURIComponent(lockedTarget || '')}&tolerance=${toleranceRadius}`);
+        const root = await res.json();
+        if (!root || !root.name) {
+          svg.innerHTML = '<text x="450" y="190" fill="#64748b" text-anchor="middle" font-family="Geist Mono" font-size="12">Mount directory to render tree</text>';
+          return;
+        }
+
+        const rx = 450, ry = 40;
+        let c = `
+          <circle cx="${rx}" cy="${ry}" r="14" fill="#ffea00" />
+          <text x="${rx}" y="${ry + 4}" fill="#000" font-size="10" font-weight="bold" font-family="Geist Mono" text-anchor="middle">Root</text>
+        `;
+
+        const ch = root.children || [];
+        if (ch.length > 0) {
+          const sp = 800 / (ch.length + 1);
+          ch.forEach((child, i) => {
+            const cx = 50 + sp * (i + 1);
+            const cy = 180;
+
+            const isP = child.status === 'pruned';
+            const isM = child.status === 'match';
+            const col = isM ? '#10b981' : (isP ? '#334155' : '#94a3b8');
+            const dash = isP ? 'stroke-dasharray="4"' : '';
+
+            c += `<line x1="${rx}" y1="${ry}" x2="${cx}" y2="${cy}" stroke="${col}" stroke-width="1.5" ${dash}/>`;
+            c += `<circle cx="${cx}" cy="${cy}" r="12" fill="${isM ? '#064e3b' : '#14171f'}" stroke="${col}" stroke-width="1.5"/>`;
+            c += `<text x="${cx}" y="${cy + 4}" fill="#f1f5f9" font-size="9" font-family="Geist Mono" text-anchor="middle">d=${child.edge_distance}</text>`;
+          });
+        }
+
+        svg.innerHTML = c;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderDiffStage() {
+      const container = document.getElementById('diffContainer');
+      if (!lockedTarget || items.length < 2) {
+        container.innerHTML = `
+          <div class="p-6 rounded-2xl bg-[#10131a] border border-[#1f2533] text-center text-xs text-zinc-500 font-mono py-24 col-span-full">
+            Lock a photo in Library mode to compare side-by-side with detected duplicates.
+          </div>
+        `;
+        return;
+      }
+
+      const dup = items.find(i => i.path !== lockedTarget) || items[1];
+
+      container.innerHTML = `
+        <!-- Target Card -->
+        <div class="rounded-2xl border border-[#ffea00] bg-[#10131a] p-4 space-y-3 font-mono">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-[#ffea00]">Target Pivot (100%)</span>
+            <span class="text-zinc-400">${lockedTarget.split('/').pop()}</span>
+          </div>
+          <div class="h-80 rounded-xl bg-black overflow-hidden flex items-center justify-center border border-zinc-800">
+            <img src="/api/raw-image?path=${encodeURIComponent(lockedTarget)}" class="max-h-full max-w-full object-contain">
+          </div>
+        </div>
+
+        <!-- Matched Duplicate Card -->
+        <div class="rounded-2xl border border-emerald-500 bg-[#10131a] p-4 space-y-3 font-mono">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-emerald-400">Near-Duplicate (${dup.similarity}% Match &bull; d=${dup.distance})</span>
+            <span class="text-zinc-400">${dup.filename}</span>
+          </div>
+          <div class="h-80 rounded-xl bg-black overflow-hidden flex items-center justify-center border border-zinc-800">
+            <img src="/api/raw-image?path=${encodeURIComponent(dup.path)}" class="max-h-full max-w-full object-contain">
+          </div>
+        </div>
+      `;
+    }
+
+    function capitalize(s) {
+      return (s || '').charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function escapeStr(s) {
+      return (s || '').replace(/'/g, "\\'");
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

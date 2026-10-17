@@ -1,0 +1,9 @@
+# Burkhard-Keller Metric Space Image Deduplicator
+# Course: Data Structures & Algorithms (DSA)
+
+# Core Algorithmic Dependencies (for Web Dashboard & Metric BK-Tree)
+numpy>=1.24.0
+Pillow>=9.5.0
+
+# Optional Desktop GUI Dependency (only required for running 'python run.py --desktop')
+customtkinter>=5.2.0

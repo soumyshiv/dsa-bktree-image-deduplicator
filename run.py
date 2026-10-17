@@ -15,7 +15,7 @@ import argparse
 
 # Ensure local module directory is in sys.path
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-MODULE_DIR = os.path.join(PROJECT_ROOT, "Antigravity ver")
+MODULE_DIR = os.path.join(PROJECT_ROOT, "deduplicator")
 if MODULE_DIR not in sys.path:
     sys.path.insert(0, MODULE_DIR)
 

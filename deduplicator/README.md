@@ -8,18 +8,16 @@ A high-performance Near-Duplicate Image Detection & Culling Suite built on **Bur
 
 Activate your conda environment and run:
 
-### 1. Modern Web Dashboard (Recommended for Demos & Viva)
+### 1. Modern Web Dashboard (Recommended)
 ```bash
-cd "/Users/soumyshivdas/Documents/College/DSA project/Antigravity ver"
-conda run -n dsa_project python web_app.py
+python run.py
 ```
 > Automatically opens your default browser at `http://localhost:8080`.  
-> Features live algorithmic benchmark gauges, interactive SVG tree explorer, and dark glassmorphic UI.
+> Features live algorithmic benchmark telemetry, interactive SVG tree explorer, and dark glassmorphic UI.
 
 ### 2. Desktop GUI (CustomTkinter)
 ```bash
-cd "/Users/soumyshivdas/Documents/College/DSA project/Antigravity ver"
-conda run -n dsa_project python app.py
+python run.py --desktop
 ```
 
 ---
@@ -27,7 +25,7 @@ conda run -n dsa_project python app.py
 ## 📚 Project Structure
 
 ```
-Antigravity ver/
+deduplicator/
 ├── web_app.py          # Zero-dependency async HTTP server & REST API
 ├── index.html          # Modern Single-Page App (Tailwind CSS, SVG Tree visualizer)
 ├── bktree.py           # Burkhard-Keller Tree with O(1) deque search & graph export

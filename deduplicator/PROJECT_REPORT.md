@@ -81,7 +81,7 @@ Any branch where $d_2 < d_1 - \tau$ or $d_2 > d_1 + \tau$ is **guaranteed to con
 
 ---
 
-## 5. Algorithmic Upgrades in Antigravity Version
+## 5. Key Algorithmic Upgrades
 1. **Live Algorithmic Benchmark Engine:**  
    Every query executes both the pruned BK-Tree search and a naive $O(N)$ linear scan on the identical dataset, reporting real-time execution times in milliseconds, exact nodes inspected, and speedup ratio.
 2. **$O(1)$ Deque Queue:**  

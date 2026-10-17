@@ -103,7 +103,7 @@ The UI displays real-time execution times in milliseconds ($\text{ms}$), exact n
 ├── sample_images/         # Bundled demo dataset (exact & near-duplicates)
 ├── README.md              # Project documentation & viva guide
 │
-└── Antigravity ver/       # Core Implementation & Dashboards
+└── deduplicator/          # Core Implementation & Dashboards
     ├── web_app.py         # Multi-threaded HTTP server & REST API
     ├── index.html         # Modern Web UI (SVG tree explorer, Geist font, gauges)
     ├── app.py             # CustomTkinter Desktop GUI edition

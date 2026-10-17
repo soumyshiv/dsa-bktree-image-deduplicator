@@ -197,7 +197,7 @@ class BKTree:
         return matches
 
     def get_tree_stats(self) -> Dict[str, Any]:
-        """Returns structural analytics about the tree for viva presentation."""
+        """Returns structural analytics about the tree."""
         if not self.root:
             return {
                 "total_nodes": 0,

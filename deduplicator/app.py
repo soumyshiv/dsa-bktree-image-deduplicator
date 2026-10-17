@@ -7,7 +7,7 @@ Key Academic & DSA Features:
 3. Live Algorithmic Benchmark Card:
    - BK-Tree vs Linear Scan O(N) runtime comparison.
    - Exact node inspection count and search space pruning percentage.
-4. Tree Structural Health & Viva Statistics Modal.
+4. Tree Structural Health & Statistics Modal.
 5. High-performance batch image culling, staging recycle bin, and EXIF extraction.
 """
 
@@ -150,7 +150,7 @@ class DeduplicatorApp(ctk.CTk):
 
         self.tree_info_btn = ctk.CTkButton(
             self.bench_frame,
-            text="🌲 View Tree Stats & Viva Details",
+            text="🌲 View Tree Stats & Details",
             fg_color="#2b3b4f",
             hover_color="#3d536f",
             height=26,

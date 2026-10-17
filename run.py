@@ -67,7 +67,7 @@ def main():
         description="BK-Tree Metric Space Image Deduplication Suite (DSA Project)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  python run.py            # Launch interactive Web Studio (Recommended for viva & grading)
+  python run.py            # Launch interactive Web Studio (Recommended)
   python run.py --desktop  # Launch native CustomTkinter desktop interface
   python run.py --port 9000# Launch web studio on custom port
 """

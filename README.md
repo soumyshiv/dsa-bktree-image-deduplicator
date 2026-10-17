@@ -101,7 +101,7 @@ The UI displays real-time execution times in milliseconds ($\text{ms}$), exact n
 ├── run.py                 # Unified entrypoint launcher (Web Studio & Desktop GUI)
 ├── requirements.txt       # Project dependencies (Pillow, numpy, customtkinter)
 ├── sample_images/         # Bundled demo dataset (exact & near-duplicates)
-├── README.md              # Project documentation & viva guide
+├── README.md              # Project documentation
 │
 └── deduplicator/          # Core Implementation & Dashboards
     ├── web_app.py         # Multi-threaded HTTP server & REST API
@@ -109,18 +109,5 @@ The UI displays real-time execution times in milliseconds ($\text{ms}$), exact n
     ├── app.py             # CustomTkinter Desktop GUI edition
     ├── bktree.py          # BKTree & BKNode data structures with O(1) deque
     ├── hash_logic.py      # 100-bit multi-channel perceptual hashing logic
-    └── PROJECT_REPORT.md  # Formal Academic Project Report for Viva Voce
+    └── PROJECT_REPORT.md  # Formal Academic Project Report
 ```
-
----
-
-## 🎓 Viva Voce Oral Defense Q&A
-
-**Q1: Why not use a Binary Search Tree (BST) or AVL Tree?**  
-> *Answer:* BSTs and AVL trees require a **total ordering** ($x < y$), which does not exist in multi-dimensional feature hashes. BK-Trees only require a **distance metric** satisfying the Triangle Inequality, allowing nearest-neighbor range queries in discrete metric spaces.
-
-**Q2: What happens when tolerance threshold $\tau = 0$?**  
-> *Answer:* The search interval collapses to $[d_1 - 0, d_1 + 0] = \{d_1\}$. The search algorithm traverses only the single edge matching distance $d_1$ at each level, achieving true $O(\log N)$ exact search.
-
-**Q3: Why is node deletion complex in a BK-Tree?**  
-> *Answer:* Edge weights represent discrete distances from the parent node. If an internal node is deleted, its children cannot be trivially reparented to the grandparent because their distance to the grandparent differs from their distance to the deleted parent. Therefore, subtree re-insertion is required.

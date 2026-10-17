@@ -31,7 +31,7 @@ deduplicator/
 ├── bktree.py           # Burkhard-Keller Tree with O(1) deque search & graph export
 ├── hash_logic.py       # 100-bit multi-channel perceptual hash & Hamming metric
 ├── app.py              # CustomTkinter Desktop GUI edition
-├── PROJECT_REPORT.md   # Complete Academic Project Report & Viva Voce Guide
+├── PROJECT_REPORT.md   # Complete Academic Project Report
 └── README.md           # Instructions
 ```
 

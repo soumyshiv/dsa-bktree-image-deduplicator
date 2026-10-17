@@ -88,19 +88,3 @@ Any branch where $d_2 < d_1 - \tau$ or $d_2 > d_1 + \tau$ is **guaranteed to con
    Replaced $O(k)$ array shifts (`list.pop(0)`) with double-ended queue `collections.deque.popleft()`.
 3. **Tree Inspection & Structural Analytics:**  
    Calculates tree height, node distribution, and branching factors on demand.
-
----
-
-## 6. Viva Voce (Oral Exam) Preparation
-
-### Q1: Why use a BK-Tree instead of a Binary Search Tree (BST) or AVL Tree?
-> **Answer:** BSTs and AVL trees require a **total ordering** ($<$ or $>$), which does not exist in multi-dimensional perceptual hashes. BK-Trees only require a **distance metric** satisfying the Triangle Inequality, allowing nearest-neighbor range queries in discrete metric spaces.
-
-### Q2: What happens when tolerance $\tau = 0$?
-> **Answer:** The search bounds collapse to $[d_1 - 0, d_1 + 0] = \{d_1\}$. The algorithm follows only a single edge at distance $d_1$ at each level, achieving true $O(\log N)$ exact search.
-
-### Q3: What happens when tolerance $\tau$ is set very high (e.g. 50+ bits)?
-> **Answer:** The search interval $[d_1 - \tau, d_1 + \tau]$ widens to encompass almost all children edges, degrading pruning efficiency and approaching $O(N)$ linear time.
-
-### Q4: Why is node deletion challenging in a BK-Tree?
-> **Answer:** Because edge weights represent discrete distances from the parent node. If an internal node is deleted, its children cannot simply be reparented to the grandparent because their distance to the grandparent is generally different from their distance to the deleted parent. Therefore, re-inserting or rebuilding the subtree is standard.

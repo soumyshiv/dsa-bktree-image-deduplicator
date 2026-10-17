@@ -6,30 +6,51 @@
 
 ---
 
-## 🚀 Quickstart (For Evaluators & Professors)
+## 🚀 Quickstart: Run Directly from GitHub
 
-Get the application running in **under 30 seconds** on macOS, Windows, or Linux:
+Get the entire suite running on macOS, Windows, or Linux in **under 60 seconds**:
 
-### 1. Install Dependencies
+### 1. Clone the Repository
+```bash
+git clone https://github.com/soumyshiv/dsa-bktree-image-deduplicator.git
+cd dsa-bktree-image-deduplicator
+```
+
+### 2. (Optional but Recommended) Create a Virtual Environment
+```bash
+# On macOS / Linux:
+python3 -m venv venv
+source venv/bin/activate
+
+# On Windows (Command Prompt / PowerShell):
+python -m venv venv
+venv\Scripts\activate
+```
+
+### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
+> *(On macOS systems without an active virtualenv, you can run: `python3 -m pip install -r requirements.txt`)*
 
-### 2. Launch the Application
+---
 
-#### 🌟 Flagship Modern Web Studio (Recommended)
+### 4. Launch the Application
+
+#### 🌟 Option A: Flagship Modern Web Studio (Recommended)
 ```bash
 python3 run.py
 ```
-* Automatically opens in your browser at `http://localhost:8080`.
-* **Zero-dependency local server**: Uses Python's built-in `http.server`.
-* Features an **interactive SVG BK-Tree Visualizer**, live $O(N)$ vs BK-Tree benchmark dials, and a **"Load Demo Dataset"** one-click button with bundled test images.
+* Automatically opens in your browser at **`http://localhost:8080`**.
+* **Zero extra server dependencies**: Built on Python's native `http.server`.
+* Features the **Duplicate Clusters** tab, **Interactive Visual Diff Slider**, live $O(N)$ benchmark telemetry, and a **"⚡ Load Demo Dataset"** one-click button with 72 pre-bundled test images.
 
-#### 🖥️ Native Desktop GUI (CustomTkinter Edition)
+#### 🖥️ Option B: Native Desktop GUI (CustomTkinter Edition)
 ```bash
 python3 run.py --desktop
 ```
 * Standalone desktop window for local batch culling, EXIF inspection, and recycle bin staging.
+
 
 ---
 

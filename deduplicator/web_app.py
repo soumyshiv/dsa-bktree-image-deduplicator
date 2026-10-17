@@ -540,10 +540,16 @@ class DeduplicatorHTTPHandler(BaseHTTPRequestHandler):
 
         # 6. API: Tree Graph Structure (for interactive SVG visualizer)
         elif path == "/api/tree-graph":
-            target_path = params.get("target", [STATE["main_target"]])[0]
-            tolerance = int(params.get("tolerance", [12])[0])
+            target_path = params.get("target", [STATE.get("main_target")])[0]
+            try:
+                tolerance = int(params.get("tolerance", [12])[0])
+            except (ValueError, TypeError):
+                tolerance = 12
             target_h = STATE["all_images"].get(target_path) if target_path else None
-            graph_data = STATE["bktree"].get_tree_graph(target_hash=target_h, tolerance=tolerance)
+            if STATE.get("bktree"):
+                graph_data = STATE["bktree"].get_tree_graph(target_hash=target_h, tolerance=tolerance)
+            else:
+                graph_data = {}
             self._send_json(graph_data)
 
         # 7. API: EXIF Metadata

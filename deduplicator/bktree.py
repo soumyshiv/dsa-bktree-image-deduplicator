@@ -420,7 +420,7 @@ class BKTree:
         max_children_per_node: int = 8,
     ) -> Dict[str, Any]:
         """
-        Exports tree hierarchy for visualization in the web dashboard.
+        Exports tree hierarchy and step-by-step pruning simulation for the web dashboard.
         Annotates nodes as:
         - 'target': The locked query target
         - 'match': Within tolerance (d <= tau)
@@ -430,8 +430,13 @@ class BKTree:
         if not self.root:
             return {}
 
+        node_id_counter = [0]
+
         def _traverse(node: BKNode, edge_dist: int, depth: int, parent_visited: bool) -> Dict[str, Any]:
-            filename = os.path.basename(node.paths[0]) if node.paths else "Node"
+            node_id_counter[0] += 1
+            current_id = f"node_{node_id_counter[0]}"
+            filepath = node.paths[0] if node.paths else ""
+            filename = os.path.basename(filepath) if filepath else "Node"
             
             # Compute distance to target if available
             dist_to_target = None
@@ -461,14 +466,79 @@ class BKTree:
                     children_data.append(child_dict)
 
             return {
+                "id": current_id,
                 "name": filename,
-                "path": node.paths[0],
+                "path": filepath,
+                "thumbnail_url": f"/api/thumbnail?path={filepath}",
                 "hash_str": str(node.img_hash),
                 "edge_distance": edge_dist,
                 "dist_to_target": dist_to_target,
                 "status": status,
                 "exact_duplicates_count": len(node.paths),
+                "total_subtree_nodes": node.total_subnodes(),
                 "children": children_data,
             }
 
-        return _traverse(self.root, edge_dist=0, depth=1, parent_visited=True)
+        root_dict = _traverse(self.root, edge_dist=0, depth=1, parent_visited=True)
+
+        # Generate chronological simulation steps for the Step-by-Step Pruning Walkthrough
+        simulation_steps = []
+        if target_hash is not None and self.root:
+            queue = deque([(self.root, 0, 1)])
+            step_idx = 1
+            total_pruned_subnodes = 0
+
+            while queue and len(simulation_steps) < 15:
+                curr, edge_d, depth = queue.popleft()
+                d_QP = target_hash - curr.img_hash
+                is_match = d_QP <= tolerance
+                low_bound = d_QP - tolerance
+                high_bound = d_QP + tolerance
+
+                evaluated_branches = []
+                sorted_edges = sorted(curr.children.keys())
+                for edge in sorted_edges:
+                    child_node = curr.children[edge]
+                    in_bounds = low_bound <= edge <= high_bound
+                    subnodes = child_node.total_subnodes()
+                    ch_name = os.path.basename(child_node.paths[0]) if child_node.paths else "Node"
+                    if in_bounds:
+                        evaluated_branches.append({
+                            "edge": edge,
+                            "child_name": ch_name,
+                            "action": "EXPLORE",
+                            "reason": f"{low_bound} ≤ {edge} ≤ {high_bound}",
+                            "subnodes": subnodes,
+                        })
+                        if depth < max_depth:
+                            queue.append((child_node, edge, depth + 1))
+                    else:
+                        total_pruned_subnodes += subnodes
+                        evaluated_branches.append({
+                            "edge": edge,
+                            "child_name": ch_name,
+                            "action": "PRUNE",
+                            "reason": f"{edge} < {low_bound}" if edge < low_bound else f"{edge} > {high_bound}",
+                            "subnodes": subnodes,
+                        })
+
+                simulation_steps.append({
+                    "step_num": step_idx,
+                    "pivot_name": os.path.basename(curr.paths[0]) if curr.paths else "Root",
+                    "pivot_path": curr.paths[0] if curr.paths else "",
+                    "edge_from_parent": edge_d,
+                    "depth": depth,
+                    "d_QP": d_QP,
+                    "tolerance": tolerance,
+                    "low_bound": low_bound,
+                    "high_bound": high_bound,
+                    "is_match": is_match,
+                    "evaluated_branches": evaluated_branches,
+                    "cumulative_pruned": total_pruned_subnodes,
+                })
+                step_idx += 1
+
+        root_dict["simulation_steps"] = simulation_steps
+        root_dict["tree_height"] = self.root.get_max_depth() if self.root else 0
+        root_dict["total_tree_nodes"] = self.total_nodes
+        return root_dict

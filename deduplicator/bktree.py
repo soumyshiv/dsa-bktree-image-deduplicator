@@ -83,6 +83,36 @@ class SearchBenchmark:
         }
 
 
+class DisjointSetUnion:
+    """
+    Disjoint Set Union (DSU / Union-Find) with path compression and rank optimization.
+    Time Complexity: Amortized O(alpha(N)) ~ O(1) per operation.
+    """
+
+    def __init__(self, elements):
+        self.parent = {e: e for e in elements}
+        self.rank = {e: 0 for e in elements}
+
+    def find(self, item):
+        if self.parent[item] != item:
+            self.parent[item] = self.find(self.parent[item])
+        return self.parent[item]
+
+    def union(self, x, y) -> bool:
+        root_x = self.find(x)
+        root_y = self.find(y)
+        if root_x == root_y:
+            return False
+        if self.rank[root_x] < self.rank[root_y]:
+            self.parent[root_x] = root_y
+        elif self.rank[root_x] > self.rank[root_y]:
+            self.parent[root_y] = root_x
+        else:
+            self.parent[root_y] = root_x
+            self.rank[root_x] += 1
+        return True
+
+
 class BKTree:
     """
     Burkhard-Keller Tree implementation with O(1) deque search
@@ -195,6 +225,175 @@ class BKTree:
         """Standard search interface."""
         matches, _ = self.search_with_benchmark(target_hash, tolerance)
         return matches
+
+    def find_all_duplicate_clusters(
+        self,
+        tolerance: int,
+        all_items: Dict[str, Any],
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Global all-pairs duplicate cluster detection.
+        Groups all indexed images into equivalence duplicate clusters where
+        images within tolerance form connected components.
+
+        Complexity:
+            Using BK-Tree range queries: O(N * N^alpha) = O(N^(1+alpha)) where alpha < 1,
+            compared to exhaustive pairwise comparison O(N^2).
+        """
+        t0 = time.perf_counter()
+        if not all_items:
+            return {
+                "clusters": [],
+                "total_clusters": 0,
+                "total_duplicates": 0,
+                "total_savings_mb": 0.0,
+                "elapsed_ms": 0.0,
+                "tolerance": tolerance,
+            }
+
+        paths = list(all_items.keys())
+        dsu = DisjointSetUnion(paths)
+
+        # 1. Query BK-Tree for each image to connect near-duplicate components
+        for p, h in all_items.items():
+            matches = self.search(h, tolerance)
+            for m in matches:
+                if m in dsu.parent:
+                    dsu.union(p, m)
+
+        # 2. Group paths by DSU root
+        groups: Dict[str, List[str]] = {}
+        for p in paths:
+            root = dsu.find(p)
+            groups.setdefault(root, []).append(p)
+
+        # 3. Format clusters with size >= 2
+        meta_dict = metadata or {}
+        clusters = []
+        total_redundant = 0
+        total_savings_mb = 0.0
+
+        cluster_idx = 1
+        for root, group in groups.items():
+            if len(group) < 2:
+                continue
+
+            # Sort group to find the "best candidate" (highest resolution, largest file size)
+            def _score_image(fpath: str) -> Tuple[int, float, str]:
+                m = meta_dict.get(fpath, {})
+                dim_str = m.get("dimensions", "0 × 0")
+                try:
+                    w, h = [int(x.strip().split()[0]) for x in dim_str.split("×")]
+                    res = w * h
+                except Exception:
+                    res = 0
+                sz = float(m.get("size_mb", 0.0))
+                return (res, sz, fpath)
+
+            sorted_group = sorted(group, key=_score_image, reverse=True)
+            best_master = sorted_group[0]
+            redundant_files = sorted_group[1:]
+
+            # Intra-cluster distances relative to best master
+            master_hash = all_items.get(best_master)
+            cluster_items = []
+            for item_path in sorted_group:
+                m = meta_dict.get(item_path, {})
+                item_h = all_items.get(item_path)
+                dist = (
+                    (master_hash - item_h)
+                    if (master_hash is not None and item_h is not None)
+                    else 0
+                )
+                sim = (
+                    max(0, 100 - dist)
+                    if dist <= 22
+                    else max(0, int(round(78 - (dist - 22) * 3.5)))
+                )
+                cluster_items.append({
+                    "path": item_path,
+                    "filename": os.path.basename(item_path),
+                    "is_master": (item_path == best_master),
+                    "distance_to_master": dist,
+                    "similarity": sim,
+                    "dimensions": m.get("dimensions", "N/A"),
+                    "size_mb": m.get("size_mb", 0.0),
+                    "format": m.get("format", "IMG"),
+                })
+
+            redundant_size = sum(
+                meta_dict.get(p, {}).get("size_mb", 0.0) for p in redundant_files
+            )
+            total_redundant += len(redundant_files)
+            total_savings_mb += redundant_size
+
+            clusters.append({
+                "cluster_id": cluster_idx,
+                "master_path": best_master,
+                "master_filename": os.path.basename(best_master),
+                "items": cluster_items,
+                "total_items": len(cluster_items),
+                "redundant_count": len(redundant_files),
+                "redundant_paths": redundant_files,
+                "potential_savings_mb": round(redundant_size, 2),
+            })
+            cluster_idx += 1
+
+        # Sort clusters by potential size savings descending
+        clusters.sort(
+            key=lambda c: (c["redundant_count"], c["potential_savings_mb"]),
+            reverse=True,
+        )
+        elapsed_ms = (time.perf_counter() - t0) * 1000.0
+
+        return {
+            "clusters": clusters,
+            "total_clusters": len(clusters),
+            "total_duplicates": total_redundant,
+            "total_savings_mb": round(total_savings_mb, 2),
+            "elapsed_ms": round(elapsed_ms, 2),
+            "tolerance": tolerance,
+        }
+
+    @classmethod
+    def build_balanced(cls, items: List[Tuple[Any, str]]) -> "BKTree":
+        """
+        Constructs a balanced BK-Tree using medoid pivot selection.
+        Instead of arbitrary sequential insertion order, the root is chosen
+        as the medoid (the element with minimal sum-of-distances to a sample),
+        maximizing subtree dispersion and minimizing tree height.
+        """
+        tree = cls()
+        if not items:
+            return tree
+
+        if len(items) == 1:
+            h, p = items[0]
+            tree.add(h, p)
+            return tree
+
+        # Select medoid from sample (up to 64 items for O(K^2) efficiency)
+        sample = items[: min(64, len(items))]
+        best_idx = 0
+        min_total_dist = float("inf")
+        for i, (h_i, _) in enumerate(sample):
+            tot = sum(h_i - h_j for _, (h_j, _) in enumerate(sample))
+            if tot < min_total_dist:
+                min_total_dist = tot
+                best_idx = i
+
+        # Insert medoid first as root pivot
+        pivot_h, pivot_p = items[best_idx]
+        tree.add(pivot_h, pivot_p)
+
+        # Insert remaining items
+        for i, (h, p) in enumerate(items):
+            if i != best_idx:
+                tree.add(h, p)
+
+        return tree
+
 
     def get_tree_stats(self) -> Dict[str, Any]:
         """Returns structural analytics about the tree."""

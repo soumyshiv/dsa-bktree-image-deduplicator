@@ -49,9 +49,34 @@ class PerceptualHash:
 
     def __str__(self):
         # Convert 100 bits into a 25-character hex string for the UI metadata box
+        return self.to_hex()[:25]
+
+    def to_hex(self) -> str:
+        """Serializes 100-bit array to a standard 26-char hex string."""
         padded = np.pad(self.bits, (0, 4), constant_values=0)
         packed = np.packbits(padded)
-        return packed.tobytes().hex()[:25]
+        return packed.tobytes().hex()
+
+    @classmethod
+    def from_hex(cls, hex_str: str) -> "PerceptualHash":
+        """Deserializes a hex string back into a 100-bit PerceptualHash."""
+        raw_bytes = bytes.fromhex(hex_str)
+        bits = np.unpackbits(np.frombuffer(raw_bytes, dtype=np.uint8))[:100]
+        return cls(bits)
+
+
+def compute_fast_exact_hash(file_path: str, chunk_size: int = 65536) -> str:
+    """Computes quick SHA-256 digest for O(1) exact bit-for-bit duplicate pre-filtering."""
+    import hashlib
+    h = hashlib.sha256()
+    try:
+        with open(file_path, "rb") as f:
+            while chunk := f.read(chunk_size):
+                h.update(chunk)
+        return h.hexdigest()
+    except Exception:
+        return ""
+
 
 
 def _compute_2d_dct(arr: np.ndarray) -> np.ndarray:

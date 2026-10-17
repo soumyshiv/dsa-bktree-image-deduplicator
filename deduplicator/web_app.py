@@ -13,11 +13,13 @@ import subprocess
 import sys
 import urllib.parse
 import webbrowser
+from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import numpy as np
 from PIL import Image, ExifTags
 
 from bktree import BKTree
-from hash_logic import generate_hash
+from hash_logic import generate_hash, PerceptualHash, compute_fast_exact_hash
 
 
 # Global Application State
@@ -25,12 +27,14 @@ STATE = {
     "folder": None,
     "bktree": BKTree(),
     "all_images": {},     # file_path -> img_hash
+    "exact_hashes": {},   # file_path -> sha256 hex string
     "thumbnails": {},     # file_path -> JPEG bytes
     "metadata": {},       # file_path -> {dimensions, size_mb, format}
     "recycle_bin": set(), # staged file paths
     "main_target": None,
     "main_hash": None,
 }
+
 
 
 def ask_cross_platform_folder_picker():
@@ -64,8 +68,148 @@ def ask_cross_platform_folder_picker():
     return None
 
 
+CACHE_FILENAME = ".bktree_cache.json"
+
+
+def _load_cache(folder_path: str) -> dict:
+    cache_path = os.path.join(folder_path, CACHE_FILENAME)
+    if os.path.isfile(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def _save_cache(folder_path: str, cache_data: dict):
+    cache_path = os.path.join(folder_path, CACHE_FILENAME)
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(cache_data, f, indent=2)
+    except Exception as e:
+        print(f"Cache write error: {e}")
+
+
+def _process_single_image(fpath: str, cached_entry: dict = None) -> dict:
+    """Worker function to process or retrieve an image's hash, metadata, and thumbnail."""
+    try:
+        st = os.stat(fpath)
+        mtime = st.st_mtime
+        size = st.st_size
+
+        # Check if cache is still valid for this file
+        if cached_entry and cached_entry.get("mtime") == mtime and cached_entry.get("size") == size:
+            h_obj = PerceptualHash.from_hex(cached_entry["hash_hex"])
+            with Image.open(fpath) as img:
+                img.thumbnail((320, 240))
+                buf = io.BytesIO()
+                img.convert("RGB").save(buf, format="JPEG", quality=80)
+                thumb_bytes = buf.getvalue()
+            return {
+                "path": fpath,
+                "hash": h_obj,
+                "hash_hex": cached_entry["hash_hex"],
+                "exact_hash": cached_entry.get("exact_hash", ""),
+                "metadata": cached_entry["metadata"],
+                "thumbnail": thumb_bytes,
+                "mtime": mtime,
+                "size": size,
+                "from_cache": True,
+            }
+
+        # Otherwise compute hash from scratch
+        exact_h = compute_fast_exact_hash(fpath)
+        h_obj = generate_hash(fpath)
+        if h_obj is None:
+            return None
+
+        with Image.open(fpath) as img:
+            w, h = img.width, img.height
+            fmt = img.format or "JPEG"
+            meta = {
+                "dimensions": f"{w} × {h}",
+                "size_mb": round(size / (1024 * 1024), 2),
+                "format": fmt,
+            }
+            img.thumbnail((320, 240))
+            buf = io.BytesIO()
+            img.convert("RGB").save(buf, format="JPEG", quality=80)
+            thumb_bytes = buf.getvalue()
+
+        return {
+            "path": fpath,
+            "hash": h_obj,
+            "hash_hex": h_obj.to_hex(),
+            "exact_hash": exact_h,
+            "metadata": meta,
+            "thumbnail": thumb_bytes,
+            "mtime": mtime,
+            "size": size,
+            "from_cache": False,
+        }
+    except Exception as e:
+        print(f"Error processing {fpath}: {e}")
+        return None
+
+
+def generate_diff_heatmap(path1: str, path2: str) -> bytes:
+    """
+    Computes a pixel-wise difference heatmap between two images.
+    Returns JPEG bytes of an amplified RGB heatmap highlighting discrepancies.
+    """
+    try:
+        with Image.open(path1) as im1, Image.open(path2) as im2:
+            im1_rgb = im1.convert("RGB").resize((480, 360), Image.Resampling.BILINEAR)
+            im2_rgb = im2.convert("RGB").resize((480, 360), Image.Resampling.BILINEAR)
+
+            arr1 = np.asarray(im1_rgb, dtype=np.float32)
+            arr2 = np.asarray(im2_rgb, dtype=np.float32)
+
+            diff = np.abs(arr1 - arr2)
+            max_diff = diff.max(axis=-1)  # shape (360, 480)
+
+            # Boost non-linear difference for high-contrast visual display
+            boosted = np.clip(max_diff * 4.5, 0, 255).astype(np.uint8)
+
+            gray_base = np.asarray(im1_rgb.convert("L"), dtype=np.float32) * 0.35
+            heatmap = np.zeros((360, 480, 3), dtype=np.uint8)
+            heatmap[..., 0] = np.clip(gray_base + boosted * 1.1, 0, 255).astype(np.uint8)
+            heatmap[..., 1] = np.clip(gray_base + (255 - boosted) * 0.15, 0, 255).astype(np.uint8)
+            heatmap[..., 2] = np.clip(gray_base + (boosted > 100) * 120, 0, 255).astype(np.uint8)
+
+            out_img = Image.fromarray(heatmap)
+            buf = io.BytesIO()
+            out_img.save(buf, format="JPEG", quality=85)
+            return buf.getvalue()
+    except Exception as e:
+        print(f"Diff heatmap generation error: {e}")
+        return None
+
+
+def _resolve_file_path(p: str):
+    """Resolves relative or absolute path safely across environments."""
+    if not p:
+        return None
+    if os.path.isfile(p):
+        return p
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(STATE.get("folder") or "", p),
+        os.path.join(base_dir, p),
+        os.path.join(os.path.dirname(base_dir), p),
+        os.path.join(base_dir, "sample_images", os.path.basename(p)),
+        os.path.join(os.path.dirname(base_dir), "sample_images", os.path.basename(p)),
+    ]
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return None
+
+
 def index_folder(folder_path: str):
-    """Scans folder, extracts 100-bit perceptual hashes, and constructs the BK-Tree."""
+    """Scans folder using multi-core parallel hashing and persistent .bktree_cache.json."""
+    folder_path = os.path.abspath(folder_path)
     if not os.path.isdir(folder_path):
         return False, "Folder does not exist"
 
@@ -76,38 +220,45 @@ def index_folder(folder_path: str):
     STATE["recycle_bin"].clear()
     STATE["main_target"] = None
     STATE["main_hash"] = None
-    STATE["bktree"] = BKTree()
+    STATE["exact_hashes"].clear()
 
     valid_extensions = ('.png', '.jpg', '.jpeg', '.webp')
     filenames = sorted([f for f in os.listdir(folder_path) if f.lower().endswith(valid_extensions)])
+    fpaths = [os.path.abspath(os.path.join(folder_path, f)) for f in filenames]
 
-    for fname in filenames:
-        fpath = os.path.join(folder_path, fname)
-        img_hash = generate_hash(fpath)
-        if img_hash is not None:
-            STATE["all_images"][fpath] = img_hash
-            STATE["bktree"].add(img_hash, fpath)
+    disk_cache = _load_cache(folder_path)
+    new_cache = {}
+    items_to_insert = []
 
-            # Extract basic dimensions, filesize, and generate thumbnail
-            try:
-                st = os.stat(fpath)
-                sz = round(st.st_size / (1024 * 1024), 2)
-                with Image.open(fpath) as img:
-                    w, h = img.width, img.height
-                    fmt = img.format or "JPEG"
-                    STATE["metadata"][fpath] = {
-                        "dimensions": f"{w} × {h}",
-                        "size_mb": sz,
-                        "format": fmt,
-                    }
-                    img.thumbnail((320, 240))
-                    buf = io.BytesIO()
-                    img.convert("RGB").save(buf, format="JPEG", quality=80)
-                    STATE["thumbnails"][fpath] = buf.getvalue()
-            except Exception as e:
-                print(f"Thumbnail error for {fpath}: {e}")
+    # Parallel processing with worker thread pool
+    max_workers = min(8, max(1, os.cpu_count() or 4))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(_process_single_image, p, disk_cache.get(p)) for p in fpaths]
+        for fut in futures:
+            res = fut.result()
+            if res:
+                p = res["path"]
+                h_obj = res["hash"]
+                STATE["all_images"][p] = h_obj
+                STATE["thumbnails"][p] = res["thumbnail"]
+                STATE["metadata"][p] = res["metadata"]
+                if res.get("exact_hash"):
+                    STATE["exact_hashes"][p] = res["exact_hash"]
+                items_to_insert.append((h_obj, p))
+                new_cache[p] = {
+                    "hash_hex": res["hash_hex"],
+                    "exact_hash": res.get("exact_hash", ""),
+                    "metadata": res["metadata"],
+                    "mtime": res["mtime"],
+                    "size": res["size"],
+                }
 
-    return True, f"Indexed {len(STATE['all_images'])} images into BK-Tree"
+    # Construct balanced BK-Tree using medoid pivot selection
+    STATE["bktree"] = BKTree.build_balanced(items_to_insert)
+    _save_cache(folder_path, new_cache)
+
+    return True, f"Indexed {len(STATE['all_images'])} images into BK-Tree (Balanced Medoid Tree)"
+
 
 
 def get_exif_data(fpath: str) -> dict:
@@ -306,13 +457,15 @@ class DeduplicatorHTTPHandler(BaseHTTPRequestHandler):
         # 4. API: Full Image Stream (for side-by-side zoom)
         elif path == "/api/raw-image":
             target_path = params.get("path", [None])[0]
-            if target_path and os.path.isfile(target_path):
-                mime, _ = mimetypes.guess_type(target_path)
-                with open(target_path, "rb") as f:
+            resolved = _resolve_file_path(target_path)
+            if resolved and os.path.isfile(resolved):
+                mime, _ = mimetypes.guess_type(resolved)
+                with open(resolved, "rb") as f:
                     data = f.read()
                 self.send_response(200)
                 self.send_header("Content-Type", mime or "image/jpeg")
                 self.send_header("Content-Length", str(len(data)))
+                self.send_header("Cache-Control", "public, max-age=86400")
                 self.end_headers()
                 self.wfile.write(data)
             else:
@@ -401,7 +554,39 @@ class DeduplicatorHTTPHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json({"error": "No path provided"}, status=400)
 
-        # 8. Serve Frontend (SPA index.html)
+        # 8. API: All-Pairs Duplicate Clusters
+        elif path == "/api/clusters":
+            tolerance = int(params.get("tolerance", [12])[0])
+            active_items = {
+                p: h for p, h in STATE["all_images"].items()
+                if p not in STATE["recycle_bin"]
+            }
+            clusters_data = STATE["bktree"].find_all_duplicate_clusters(
+                tolerance=tolerance,
+                all_items=active_items,
+                metadata=STATE["metadata"],
+            )
+            self._send_json(clusters_data)
+
+        # 9. API: Pixel-Wise Image Difference Heatmap
+        elif path == "/api/image-diff":
+            p1 = params.get("path1", [None])[0]
+            p2 = params.get("path2", [None])[0]
+            r1 = _resolve_file_path(p1)
+            r2 = _resolve_file_path(p2)
+            if r1 and r2 and os.path.isfile(r1) and os.path.isfile(r2):
+                heatmap_bytes = generate_diff_heatmap(r1, r2)
+                if heatmap_bytes:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "image/jpeg")
+                    self.send_header("Content-Length", str(len(heatmap_bytes)))
+                    self.send_header("Cache-Control", "public, max-age=3600")
+                    self.end_headers()
+                    self.wfile.write(heatmap_bytes)
+                    return
+            self.send_error(400, "Invalid paths for image diff")
+
+        # 10. Serve Frontend (SPA index.html)
         else:
             base_dir = os.path.dirname(os.path.abspath(__file__))
             index_path = os.path.join(base_dir, "index.html")
@@ -555,6 +740,68 @@ class DeduplicatorHTTPHandler(BaseHTTPRequestHandler):
                 "remaining": len(STATE["all_images"]),
                 "bin_count": len(STATE["recycle_bin"]),
                 "tree_stats": STATE["bktree"].get_tree_stats(),
+            })
+
+        # 7. API: Auto-Cull Redundant Images via Rule
+        elif path == "/api/auto-cull":
+            rule = post_data.get("rule", "highest_res")
+            tolerance = int(post_data.get("tolerance", 12))
+
+            active_items = {
+                p: h for p, h in STATE["all_images"].items()
+                if p not in STATE["recycle_bin"]
+            }
+            cluster_data = STATE["bktree"].find_all_duplicate_clusters(
+                tolerance=tolerance,
+                all_items=active_items,
+                metadata=STATE["metadata"],
+            )
+
+            staged_paths = []
+            for cl in cluster_data.get("clusters", []):
+                items = cl.get("items", [])
+                if len(items) < 2:
+                    continue
+
+                def _rule_sort_key(item):
+                    p = item["path"]
+                    m = STATE["metadata"].get(p, {})
+                    dim_str = m.get("dimensions", "0 × 0")
+                    try:
+                        w, h = [int(x.strip().split()[0]) for x in dim_str.split("×")]
+                        res = w * h
+                    except Exception:
+                        res = 0
+                    sz = float(m.get("size_mb", 0.0))
+                    try:
+                        mtime = os.path.getmtime(p)
+                    except Exception:
+                        mtime = 0.0
+
+                    if rule == "highest_res":
+                        return (res, sz, mtime)
+                    elif rule == "largest_file":
+                        return (sz, res, mtime)
+                    elif rule == "newest":
+                        return (mtime, res, sz)
+                    elif rule == "oldest":
+                        return (-mtime, res, sz)
+                    return (res, sz, mtime)
+
+                sorted_items = sorted(items, key=_rule_sort_key, reverse=True)
+                for other in sorted_items[1:]:
+                    op = other["path"]
+                    if op != STATE["main_target"]:
+                        STATE["recycle_bin"].add(op)
+                        staged_paths.append(op)
+
+            self._send_json({
+                "success": True,
+                "staged_count": len(staged_paths),
+                "bin_count": len(STATE["recycle_bin"]),
+                "rule": rule,
+                "tolerance": tolerance,
+                "total_clusters": len(cluster_data.get("clusters", [])),
             })
 
         else:

@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 #### 🌟 Flagship Modern Web Studio (Recommended)
 ```bash
-python run.py
+python3 run.py
 ```
 * Automatically opens in your browser at `http://localhost:8080`.
 * **Zero-dependency local server**: Uses Python's built-in `http.server`.
@@ -27,7 +27,7 @@ python run.py
 
 #### 🖥️ Native Desktop GUI (CustomTkinter Edition)
 ```bash
-python run.py --desktop
+python3 run.py --desktop
 ```
 * Standalone desktop window for local batch culling, EXIF inspection, and recycle bin staging.
 
@@ -84,13 +84,24 @@ Any branch outside this range $[d_1 - \tau, d_1 + \tau]$ is **mathematically pro
 
 ---
 
-## 🧪 Live Algorithmic Benchmark Engine
+## 🧪 Verification & Automated Testing Suite
 
-Every query executed in the Web Studio or Desktop GUI runs **both** algorithms simultaneously on the identical dataset:
-1. **Pruned BK-Tree Range Search**
-2. **Naive $O(N)$ Linear Scan**
+The project includes property-based mathematical verification and empirical complexity benchmarking:
 
-The UI displays real-time execution times in milliseconds ($\text{ms}$), exact node inspection counts, and pruning efficiency percentages.
+### 1. Run Automated Unit & Metric Axiom Tests
+```bash
+python3 -m unittest deduplicator/tests/test_bktree.py -v
+```
+* **Metric Axiom Tests:** Strictly proves that the 100-bit perceptual Hamming metric satisfies all 4 mathematical axioms (Non-negativity, Identity of Indiscernibles, Symmetry, and Triangle Inequality over 1,000 random triads).
+* **Equivalence Guarantee:** Proves that BK-Tree Triangle Inequality pruning produces the exact same result set as an exhaustive $O(N)$ linear scan across all tolerance thresholds.
+* **Connected Component Clustering:** Validates Disjoint Set Union (DSU) duplicate partitioning and highest-resolution master election.
+
+### 2. Run Algorithmic Benchmark Suite & Report Generator
+```bash
+python3 deduplicator/benchmark_suite.py
+```
+* Profiles dataset scales $N \in [50, 100, 250, 500, 1000]$ across multiple tolerance radii $\tau \in [8, 12, 16]$.
+* Generates an academic Markdown benchmark report with speedup and pruning statistics: [`BENCHMARK_RESULTS.md`](file:///Users/soumyshivdas/Documents/College/DSA%20project/deduplicator/BENCHMARK_RESULTS.md).
 
 ---
 
@@ -98,16 +109,20 @@ The UI displays real-time execution times in milliseconds ($\text{ms}$), exact n
 
 ```
 .
-├── run.py                 # Unified entrypoint launcher (Web Studio & Desktop GUI)
-├── requirements.txt       # Project dependencies (Pillow, numpy, customtkinter)
-├── sample_images/         # Bundled demo dataset (exact & near-duplicates)
-├── README.md              # Project documentation
+├── run.py                     # Unified entrypoint launcher (Web Studio & Desktop GUI)
+├── requirements.txt           # Project dependencies (Pillow, numpy, customtkinter)
+├── sample_images/             # Bundled demo dataset (exact & near-duplicates)
+├── README.md                  # Project documentation & grading guide
 │
-└── deduplicator/          # Core Implementation & Dashboards
-    ├── web_app.py         # Multi-threaded HTTP server & REST API
-    ├── index.html         # Modern Web UI (SVG tree explorer, Geist font, gauges)
-    ├── app.py             # CustomTkinter Desktop GUI edition
-    ├── bktree.py          # BKTree & BKNode data structures with O(1) deque
-    ├── hash_logic.py      # 100-bit multi-channel perceptual hashing logic
-    └── PROJECT_REPORT.md  # Formal Academic Project Report
+└── deduplicator/              # Core Implementation & Dashboards
+    ├── web_app.py             # Multi-threaded HTTP server, caching, & REST API
+    ├── index.html             # Flagship Web Studio (Clusters tab, Curtain Slider, SVG Visualizer)
+    ├── app.py                 # CustomTkinter Desktop GUI edition
+    ├── bktree.py              # BKTree, BKNode, DisjointSetUnion, & Medoid Balancer
+    ├── hash_logic.py          # 100-bit perceptual hashing & exact SHA-256 pre-filter
+    ├── benchmark_suite.py     # Standalone empirical benchmark profiler & report generator
+    ├── BENCHMARK_RESULTS.md   # Generated complexity comparison report
+    ├── PROJECT_REPORT.md      # Formal Academic Project Report
+    └── tests/
+        └── test_bktree.py     # Automated unit & metric space axiom tests
 ```

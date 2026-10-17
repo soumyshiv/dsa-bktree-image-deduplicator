@@ -22,3 +22,7 @@ ENV/
 build/
 dist/
 *.egg-info/
+
+# Local BK-Tree cache
+.bktree_cache.json
+

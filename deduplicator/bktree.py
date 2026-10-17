@@ -25,6 +25,7 @@ from collections import deque
 import os
 import time
 from typing import Any, Dict, List, Optional, Tuple
+import urllib.parse
 
 
 class BKNode:
@@ -488,7 +489,7 @@ class BKTree:
                 "id": current_id,
                 "name": filename,
                 "path": filepath,
-                "thumbnail_url": f"/api/thumbnail?path={filepath}",
+                "thumbnail_url": f"/api/thumbnail?path={urllib.parse.quote(filepath)}",
                 "hash_str": str(node.img_hash),
                 "edge_distance": edge_dist,
                 "dist_to_target": dist_to_target,

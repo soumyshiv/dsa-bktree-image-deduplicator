@@ -1805,7 +1805,8 @@
       const svg = document.getElementById('treeSvg');
       svg.innerHTML = '<text x="50%" y="50%" fill="#64748b" text-anchor="middle" font-family="Geist Mono" font-size="12">Re-rooting BK-Tree on selected image...</text>';
       try {
-        const res = await fetch(`/api/tree-graph?target=${encodeURIComponent(lockedTarget || '')}&tolerance=${toleranceRadius}`);
+        const targetParam = lockedTarget || '';
+        const res = await fetch(`/api/tree-graph?target=${encodeURIComponent(targetParam)}&tolerance=${toleranceRadius}`);
         const data = await res.json();
         treeRawData = data;
         treeSimSteps = data.simulation_steps || [];
@@ -1814,6 +1815,15 @@
         if (!treeRawData || !treeRawData.name) {
           svg.innerHTML = '<text x="50%" y="50%" fill="#64748b" text-anchor="middle" font-family="Geist Mono" font-size="12">Mount directory to render BK-Tree</text>';
           return;
+        }
+
+        // Keep lockedTarget synchronized with tree root
+        if (!lockedTarget && treeRawData.path) {
+          lockedTarget = treeRawData.path;
+          const targetBar = document.getElementById('activeTargetBar');
+          if (targetBar) targetBar.classList.remove('hidden');
+          const tf = document.getElementById('targetFilename');
+          if (tf) tf.textContent = treeRawData.name;
         }
 
         // Update Root Anchor Header Info
@@ -1992,7 +2002,11 @@
       const path = decodeURIComponent(encodedPath);
       if (path) {
         lockedTarget = path;
-        triggerSearch(path);
+        const targetBar = document.getElementById('activeTargetBar');
+        if (targetBar) targetBar.classList.remove('hidden');
+        const tf = document.getElementById('targetFilename');
+        if (tf) tf.textContent = path.split('/').pop();
+        inspectImage(path, true);
         renderTreeSvg();
       }
     }

@@ -230,6 +230,35 @@ class TestDuplicateClusteringAndDSU(unittest.TestCase):
         self.assertEqual(c1["master_path"], "/img/c1_high.jpg")
         self.assertEqual(c1["redundant_count"], 2)
 
+    def test_build_rooted_at(self):
+        """Verify dynamic re-rooting always places the requested item as root."""
+        h1 = PerceptualHash(np.zeros(100, dtype=np.uint8))
+        h2 = PerceptualHash(np.ones(100, dtype=np.uint8))
+        h3 = PerceptualHash(np.array([1] * 50 + [0] * 50, dtype=np.uint8))
+
+        all_items = {
+            "/img/desert.jpg": h1,
+            "/img/abstract.jpg": h2,
+            "/img/mountain.jpg": h3,
+        }
+
+        # Root at abstract.jpg
+        tree = BKTree.build_rooted_at("/img/abstract.jpg", all_items)
+        self.assertIsNotNone(tree.root)
+        self.assertEqual(tree.root.paths[0], "/img/abstract.jpg")
+        
+        # Verify graph representation
+        graph = tree.get_tree_graph(target_hash=h2, tolerance=12)
+        self.assertEqual(graph["name"], "abstract.jpg")
+        self.assertEqual(graph["status"], "target")
+
+        # Root at mountain.jpg
+        tree2 = BKTree.build_rooted_at("/img/mountain.jpg", all_items)
+        self.assertEqual(tree2.root.paths[0], "/img/mountain.jpg")
+        graph2 = tree2.get_tree_graph(target_hash=h3, tolerance=12)
+        self.assertEqual(graph2["name"], "mountain.jpg")
+
 
 if __name__ == "__main__":
     unittest.main()
+

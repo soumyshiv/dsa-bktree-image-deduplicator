@@ -540,23 +540,56 @@ class DeduplicatorHTTPHandler(BaseHTTPRequestHandler):
 
         # 6. API: Tree Graph Structure (for interactive SVG visualizer)
         elif path == "/api/tree-graph":
-            target_path = params.get("target", [STATE.get("main_target")])[0]
-            try:
-                tolerance = int(params.get("tolerance", [12])[0])
-            except (ValueError, TypeError):
-                tolerance = 12
+            target_param = params.get("target", [None])[0]
+            if target_param:
+                target_param = urllib.parse.unquote(target_param).strip()
+                if target_param in ("null", "undefined", ""):
+                    target_param = None
 
             active_items = {
                 p: h for p, h in STATE["all_images"].items()
                 if p not in STATE["recycle_bin"]
             }
-            if target_path and target_path in active_items:
-                rooted_tree = BKTree.build_rooted_at(target_path, active_items)
-                target_h = active_items[target_path]
+
+            matched_path = None
+            if target_param:
+                if target_param in active_items:
+                    matched_path = target_param
+                else:
+                    target_name = os.path.basename(target_param)
+                    for p in active_items:
+                        if os.path.basename(p) == target_name:
+                            matched_path = p
+                            break
+
+            if not matched_path and STATE.get("main_target"):
+                mt = STATE["main_target"]
+                if mt in active_items:
+                    matched_path = mt
+                else:
+                    mt_name = os.path.basename(mt)
+                    for p in active_items:
+                        if os.path.basename(p) == mt_name:
+                            matched_path = p
+                            break
+
+            if not matched_path and active_items:
+                if STATE.get("bktree") and STATE["bktree"].root and STATE["bktree"].root.paths and STATE["bktree"].root.paths[0] in active_items:
+                    matched_path = STATE["bktree"].root.paths[0]
+                else:
+                    matched_path = next(iter(active_items.keys()))
+
+            try:
+                tolerance = int(params.get("tolerance", [12])[0])
+            except (ValueError, TypeError):
+                tolerance = 12
+
+            if matched_path and matched_path in active_items:
+                rooted_tree = BKTree.build_rooted_at(matched_path, active_items)
+                target_h = active_items[matched_path]
                 graph_data = rooted_tree.get_tree_graph(target_hash=target_h, tolerance=tolerance)
             elif STATE.get("bktree"):
-                target_h = STATE["all_images"].get(target_path) if target_path else None
-                graph_data = STATE["bktree"].get_tree_graph(target_hash=target_h, tolerance=tolerance)
+                graph_data = STATE["bktree"].get_tree_graph(tolerance=tolerance)
             else:
                 graph_data = {}
             self._send_json(graph_data)

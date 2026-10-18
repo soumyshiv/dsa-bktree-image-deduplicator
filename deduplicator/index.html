@@ -204,9 +204,16 @@
             <h2 class="text-base font-bold text-white tracking-tight">Active Image Collection</h2>
             <p class="text-xs text-slate-400 font-mono">100-bit multi-channel perceptual hashes indexed in discrete metric space</p>
           </div>
-          <span id="resultsCountPill" class="text-xs font-mono font-semibold text-blue-300 px-3 py-1 rounded-lg bg-blue-950/60 border border-blue-800/40">
-            0 Photos
-          </span>
+          <div class="flex items-center gap-2">
+            <span id="resultsCountPill" class="text-xs font-mono font-semibold text-blue-300 px-3 py-1 rounded-lg bg-blue-950/60 border border-blue-800/40">
+              0 Photos
+            </span>
+            <!-- Collapse / Expand Sidebar Button -->
+            <button onclick="toggleOuterSidebar()" class="sidebar-toggle-btn px-3 py-1 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-200 border border-white/10 hover:border-blue-500/40 transition flex items-center gap-1.5 text-xs font-mono cursor-pointer" title="Toggle Control Sidebar">
+              <span class="sidebar-toggle-icon">⇥</span>
+              <span class="sidebar-toggle-text hidden sm:inline">Collapse Sidebar</span>
+            </button>
+          </div>
         </div>
 
         <!-- The Image Grid (In-Place Anti-Flicker Architecture) -->
@@ -259,6 +266,12 @@
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
               <span>Rescan Clusters</span>
             </button>
+
+            <!-- Collapse / Expand Sidebar Button -->
+            <button onclick="toggleOuterSidebar()" class="sidebar-toggle-btn px-3 py-1.5 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-200 border border-white/10 hover:border-blue-500/40 transition flex items-center gap-1.5 text-xs font-mono cursor-pointer" title="Toggle Control Sidebar">
+              <span class="sidebar-toggle-icon">⇥</span>
+              <span class="sidebar-toggle-text hidden sm:inline">Collapse Sidebar</span>
+            </button>
           </div>
         </div>
 
@@ -304,6 +317,11 @@
             <span id="binCountPill" class="text-xs font-mono font-semibold text-rose-400 px-3 py-1 rounded-lg bg-rose-950/60 border border-rose-800/40">
               0 Staged
             </span>
+            <!-- Collapse / Expand Sidebar Button -->
+            <button onclick="toggleOuterSidebar()" class="sidebar-toggle-btn px-3 py-1.5 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-200 border border-white/10 hover:border-blue-500/40 transition flex items-center gap-1.5 text-xs font-mono cursor-pointer" title="Toggle Control Sidebar">
+              <span class="sidebar-toggle-icon">⇥</span>
+              <span class="sidebar-toggle-text hidden sm:inline">Collapse Sidebar</span>
+            </button>
           </div>
         </div>
 
@@ -354,9 +372,9 @@
             </div>
 
             <!-- Collapse / Expand Sidebar Button -->
-            <button id="btnToggleSidebar" onclick="toggleOuterSidebar()" class="px-3 py-1 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-200 border border-white/10 hover:border-blue-500/40 transition flex items-center gap-1.5" title="Toggle Control Sidebar (Full-Width Canvas)">
-              <span id="sidebarToggleIcon">⇥</span>
-              <span id="sidebarToggleText" class="hidden sm:inline">Collapse Sidebar</span>
+            <button id="btnToggleSidebar" onclick="toggleOuterSidebar()" class="sidebar-toggle-btn px-3 py-1 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-200 border border-white/10 hover:border-blue-500/40 transition flex items-center gap-1.5 cursor-pointer" title="Toggle Control Sidebar (Full-Width Canvas)">
+              <span id="sidebarToggleIcon" class="sidebar-toggle-icon">⇥</span>
+              <span id="sidebarToggleText" class="sidebar-toggle-text hidden sm:inline">Collapse Sidebar</span>
             </button>
           </div>
         </div>
@@ -502,9 +520,16 @@
 
       <!-- SECTION 4: MATHEMATICAL PROOF -->
       <section id="sectionProof" class="hidden space-y-4">
-        <div class="pb-3 border-b border-white/10">
-          <h2 class="text-base font-bold text-white tracking-tight">Mathematical Proof: Metric Space Pruning</h2>
-          <p class="text-xs text-slate-400 font-mono">Formal mathematical proofs of metric tree pruning and algorithmic complexity</p>
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10">
+          <div>
+            <h2 class="text-base font-bold text-white tracking-tight">Mathematical Proof: Metric Space Pruning</h2>
+            <p class="text-xs text-slate-400 font-mono">Formal mathematical proofs of metric tree pruning and algorithmic complexity</p>
+          </div>
+          <!-- Collapse / Expand Sidebar Button -->
+          <button onclick="toggleOuterSidebar()" class="sidebar-toggle-btn px-3 py-1.5 rounded-lg bg-[#0e1424] hover:bg-[#151e36] text-slate-200 border border-white/10 hover:border-blue-500/40 transition flex items-center gap-1.5 text-xs font-mono cursor-pointer" title="Toggle Control Sidebar">
+            <span class="sidebar-toggle-icon">⇥</span>
+            <span class="sidebar-toggle-text hidden sm:inline">Collapse Sidebar</span>
+          </button>
         </div>
 
         <div class="space-y-4 text-xs font-mono">
@@ -880,6 +905,10 @@
     async function init() {
       setupCurtainDragging();
       setupTreePanZoom();
+      const sidebar = document.getElementById('rightSidebar');
+      if (sidebar) {
+        updateSidebarButtons(sidebar.classList.contains('hidden'));
+      }
       await fetchStatus();
       await refresh(true);
     }
@@ -951,6 +980,11 @@
           sectionEl.classList.add('hidden');
         }
       });
+
+      const sidebar = document.getElementById('rightSidebar');
+      if (sidebar) {
+        updateSidebarButtons(sidebar.classList.contains('hidden'));
+      }
 
       // Update right-sidebar controls depending on section
       const libBatch = document.getElementById('libBatchActions');
@@ -1562,23 +1596,32 @@
     let isTreePanning = false;
     let treePanStartX = 0, treePanStartY = 0;
 
+    function updateSidebarButtons(isHidden) {
+      document.querySelectorAll('.sidebar-toggle-btn').forEach(btn => {
+        const icon = btn.querySelector('.sidebar-toggle-icon');
+        const text = btn.querySelector('.sidebar-toggle-text');
+        if (isHidden) {
+          if (icon) icon.textContent = '⇤';
+          if (text) text.textContent = 'Expand Sidebar';
+          btn.classList.add('bg-blue-600/20', 'border-blue-500/50', 'text-blue-300');
+          btn.classList.remove('text-slate-200');
+          btn.title = 'Expand Control Sidebar';
+        } else {
+          if (icon) icon.textContent = '⇥';
+          if (text) text.textContent = 'Collapse Sidebar';
+          btn.classList.remove('bg-blue-600/20', 'border-blue-500/50', 'text-blue-300');
+          btn.classList.add('text-slate-200');
+          btn.title = 'Collapse Control Sidebar';
+        }
+      });
+    }
+
     function toggleOuterSidebar() {
       const sidebar = document.getElementById('rightSidebar');
-      const btn = document.getElementById('btnToggleSidebar');
-      const icon = document.getElementById('sidebarToggleIcon');
-      const text = document.getElementById('sidebarToggleText');
       if (!sidebar) return;
 
       const isHidden = sidebar.classList.toggle('hidden');
-      if (isHidden) {
-        if (icon) icon.textContent = '⇤';
-        if (text) text.textContent = 'Expand Sidebar';
-        if (btn) btn.classList.add('bg-blue-600/20', 'border-blue-500/50', 'text-blue-300');
-      } else {
-        if (icon) icon.textContent = '⇥';
-        if (text) text.textContent = 'Collapse Sidebar';
-        if (btn) btn.classList.remove('bg-blue-600/20', 'border-blue-500/50', 'text-blue-300');
-      }
+      updateSidebarButtons(isHidden);
 
       if (currentSection === 'tree') {
         setTimeout(renderTreeCanvas, 50);

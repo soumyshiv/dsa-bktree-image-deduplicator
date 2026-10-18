@@ -7,9 +7,10 @@
 
 ### 📄 Academic Project Report & Coursework Deliverables
 - **Official Final Report (21 Pages, PDF)**: [`report/SoumyshivDas.2502051963.pdf`](report/SoumyshivDas.2502051963.pdf)
+- **Official Presentation (12 Slides, 16:9 PPTX)**: [`report/SoumyshivDas.2502051963.pptx`](report/SoumyshivDas.2502051963.pptx)
 - **Comprehensive Academic Report (Markdown)**: [`report/PROJECT_REPORT.md`](report/PROJECT_REPORT.md)
 - **Standalone LaTeX Source (Overleaf / pdfLaTeX)**: [`report/DSA_Project_Report.tex`](report/DSA_Project_Report.tex)
-- **Automated Report Builder**: [`report/generate_report.py`](report/generate_report.py)
+- **Automated Deliverable Builders**: [`report/generate_report.py`](report/generate_report.py), [`report/generate_pptx.py`](report/generate_pptx.py)
 
 ---
 

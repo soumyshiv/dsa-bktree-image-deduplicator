@@ -7,3 +7,8 @@ Pillow>=9.5.0
 
 # Optional Desktop GUI Dependency (only required for running 'python run.py --desktop')
 customtkinter>=5.2.0
+
+# Optional Deliverable Generators (only required for regenerating PDF report and PPTX presentation)
+reportlab>=3.6.0
+pypdf>=3.0.0
+python-pptx>=1.0.0

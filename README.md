@@ -2,7 +2,14 @@
 
 > **Course:** Data Structures & Algorithms (DSA)  
 > **Topic:** Advanced Non-Linear Metric Trees & Triangle Inequality Pruning  
-> **Architectural Paradigm:** Dual-Surface Suite (Modern Web Dashboard + Desktop GUI)
+> **Architectural Paradigm:** Dual-Surface Suite (Modern Web Dashboard + Desktop GUI)  
+> **Student:** Soumyshiv Das (Registration No: `2502051963`)
+
+### 📄 Academic Project Report & Coursework Deliverables
+- **Official Final Report (21 Pages, PDF)**: [`report/SoumyshivDas.2502051963.pdf`](report/SoumyshivDas.2502051963.pdf)
+- **Comprehensive Academic Report (Markdown)**: [`report/PROJECT_REPORT.md`](report/PROJECT_REPORT.md)
+- **Standalone LaTeX Source (Overleaf / pdfLaTeX)**: [`report/DSA_Project_Report.tex`](report/DSA_Project_Report.tex)
+- **Automated Report Builder**: [`report/generate_report.py`](report/generate_report.py)
 
 ---
 
@@ -135,6 +142,12 @@ python3 deduplicator/benchmark_suite.py
 ├── sample_images/             # Bundled demo dataset (exact & near-duplicates)
 ├── README.md                  # Project documentation & grading guide
 │
+├── report/                    # Official Academic Coursework Deliverables
+│   ├── SoumyshivDas.2502051963.pdf  # Final 21-Page Official Project Report (PDF)
+│   ├── PROJECT_REPORT.md      # Comprehensive Academic Markdown Report
+│   ├── DSA_Project_Report.tex # Standalone LaTeX Source (for Overleaf / pdfLaTeX)
+│   └── generate_report.py     # Automated report compilation script
+│
 └── deduplicator/              # Core Implementation & Dashboards
     ├── web_app.py             # Multi-threaded HTTP server, caching, & REST API
     ├── index.html             # Flagship Web Studio (Clusters tab, Curtain Slider, SVG Visualizer)
@@ -143,7 +156,6 @@ python3 deduplicator/benchmark_suite.py
     ├── hash_logic.py          # 100-bit perceptual hashing & exact SHA-256 pre-filter
     ├── benchmark_suite.py     # Standalone empirical benchmark profiler & report generator
     ├── BENCHMARK_RESULTS.md   # Generated complexity comparison report
-    ├── PROJECT_REPORT.md      # Formal Academic Project Report
     └── tests/
         └── test_bktree.py     # Automated unit & metric space axiom tests
 ```

@@ -213,7 +213,7 @@ def make_code_box(code_text, s):
 
 
 def build_pdf():
-    pdf_path = os.path.abspath(PDF_FILENAME)
+    pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), PDF_FILENAME)
     # Page setup: A4, 54pt (0.75 in) margins
     doc = SimpleDocTemplate(
         pdf_path,
